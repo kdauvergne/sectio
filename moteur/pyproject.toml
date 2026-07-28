@@ -1,0 +1,20 @@
+[project]
+name = "sectio-moteur"
+version = "0.1.0"
+description = "Moteur de calcul méthode simplifiée selon Eurocode 2"
+authors = [
+    {name = "kdauvergne",email = "keysone.dauvergne@gmail.com"}
+]
+requires-python = ">=3.12"
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environnement virtuel
+.venv/
+
+# Tests
+.pytest_cache/
+
+# Données personnelles moteur
+moteur/data/tables_feu.json
