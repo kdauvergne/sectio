@@ -6,10 +6,13 @@ __pycache__/
 # Environnement virtuel
 .venv/
 
+# VS Code
+.vscode/
+
 # Tests
 .pytest_cache/
 
-# Données personnelles moteur
+# Données personnelles moteur à ne pas diffuser car licence AFNOR
 moteur/data/tables_feu.json
 
 # macOS
