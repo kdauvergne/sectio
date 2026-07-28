@@ -11,3 +11,6 @@ __pycache__/
 
 # Données personnelles moteur
 moteur/data/tables_feu.json
+
+# macOS
+.DS_Store
