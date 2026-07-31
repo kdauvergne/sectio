@@ -4,6 +4,10 @@ from .modeles import PoteauInput, ResultatPoteau
 from .interfaces import MethodeCalculPoteauInterface
 from math import sqrt
 
+TAUX_TRAVAIL_MIN = 1.1  # le seuil de marge de sécurité visé — on veut NRd/NEd ≥ 1,1, pas juste NRd ≥ NEd.
+M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
+CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
+
 
 class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
@@ -178,6 +182,112 @@ def calculer_ks(fyk: float, lambda_: float, type_section: str) -> float:
             return 1.0
     else:
         raise TypeSectionInvalideException()
+
+
+def resoudre_as_lineaire(
+    NEd: float, ks: float, alpha: float, Ac: float, fcd: float, fyd: float
+) -> float:
+    """
+    Résout la section d'acier (As) nécessaire, cas linéaire (h≥0,50m, kh=1 fixe).
+
+    Isole As dans NRd = ks·α·(Ac·fcd·M2_MPA_VERS_KN + As·fyd·CM2_MPA_VERS_KN),
+    avec NRd visé = TAUX_TRAVAIL_MIN·NEd.
+    On isole As car c'est l'inconnue à trouver : on connaît la charge à reprendre
+    (NEd) et on cherche combien d'acier il faut pour que la résistance du poteau
+    (NRd) atteigne au moins TAUX_TRAVAIL_MIN·NEd.
+
+    Formule isolée : As = (TAUX_TRAVAIL_MIN·NEd/(ks·α) − Ac·fcd·M2_MPA_VERS_KN) / (fyd·CM2_MPA_VERS_KN)
+
+    Paramètres :
+        NEd: Effort normal de calcul, en kN
+        ks: Coefficient ks (sans dimension)
+        alpha: Coefficient α (sans dimension)
+        ac: Aire de la section de béton, en m² (Rectangulaire : Ac = b · h | Circulaire: Ac = π · diametre² / 4)
+        fcd: Résistance de calcul du béton, en MPa
+        fyd: Résistance de calcul de l'acier, en MPa
+
+    Retourne :
+        As, en cm², non arrondi.
+    """
+    return (TAUX_TRAVAIL_MIN * NEd / (ks * alpha) - Ac * fcd * M2_MPA_VERS_KN) / (
+        fyd * CM2_MPA_VERS_KN
+    )
+
+
+def calculer_coefficients_quadratique(
+    NEd: float,
+    ks: float,
+    alpha: float,
+    Ac: float,
+    fcd: float,
+    fyd: float,
+    h: float,
+    delta: float,
+) -> tuple[float, float, float]:
+    """Calcule les coefficients a, b, c de l'équation a·As² + b·As + c = 0.
+
+    Ramène la formule NRd = kh·ks·α·(Ac·fcd + As·fyd), où kh dépend de As via
+    kh = (0,75+0,5h)·(1−6·ρ·δ), à une équation du second degré en As, avec
+    NRd visé = TAUX_TRAVAIL_MIN·NEd.
+
+    Paramètres :
+        NEd: Effort normal de calcul, en kN.
+        ks: Coefficient ks (sans dimension).
+        alpha: Coefficient α (sans dimension).
+        ac: Aire de la section de béton, en m².
+        fcd: Résistance de calcul du béton, en MPa.
+        fyd: Résistance de calcul de l'acier, en MPa.
+        h: Plus petite dimension de la section (h ou D selon le type), en m.
+        delta: Rapport d'/h (ou d'/D), sans dimension.
+
+    Retourne :
+        Tuple (a, b, c), les coefficients de l'équation du second degré.
+        a est toujours négatif en pratique. Ces coefficients doivent ensuite
+        être passés à resoudre_as_quadratique() pour obtenir As.
+    """
+    K1 = 0.75 + 0.5 * h
+    C = 6 * K1 * delta * 1e-4 / Ac
+    T = Ac * fcd * M2_MPA_VERS_KN
+
+    a = ks * alpha * C * fyd * CM2_MPA_VERS_KN
+    b = ks * alpha * (K1 * fyd * CM2_MPA_VERS_KN - C * T)
+    c = ks * alpha * K1 * T - TAUX_TRAVAIL_MIN * NEd
+
+    return (a, b, c)
+
+
+def resoudre_as_quadratique(a: float, b: float, c: float) -> float:
+    """Résout l'équation a·As² + b·As + c = 0, cas quadratique (h<0,50m).
+
+    As apparaît au carré car kh dépend lui-même de As (cf. formule de départ
+    NRd = kh·ks·α·(Ac·fcd + As·fyd)). a, b, c sont déjà calculés par
+    calculer_coefficients_quadratique() et ne dépendent plus de rien d'autre ici.
+
+    Paramètres :
+        a: Coefficient du second degré (toujours négatif en pratique).
+        b: Coefficient du premier degré.
+        c: Coefficient constant.
+
+    Retourne :
+        As, en cm², non arrondi — la plus petite racine positive de l'équation.
+
+    Erreurs :
+        ValueError: Si le discriminant (b² − 4ac) est négatif, ce qui signifie
+            qu'aucune section d'acier ne permet d'atteindre le taux de travail
+            visé (section insuffisante).
+    """
+    discriminant = b**2 - (4 * a * c)
+    if discriminant < 0:
+        raise ValueError("Section insuffisante.")
+
+    racine_1 = (-b + sqrt(discriminant)) / (2 * a)
+    racine_2 = (-b - sqrt(discriminant)) / (2 * a)
+
+    racines_positives = [r for r in (racine_1, racine_2) if r > 0]
+    if not racines_positives:
+        raise ValueError("Aucune racine positive trouvée.")
+
+    return min(racines_positives)
 
 
 def plus_petite_dimension(entree: PoteauInput) -> float:
