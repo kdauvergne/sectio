@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 
+TYPE_RECTANGULAIRE = "rectangulaire"
+TYPE_CIRCULAIRE = "circulaire"
+
 
 @dataclass(frozen=True)  # immuable
 class PoteauInput:
@@ -28,7 +31,7 @@ class PoteauInput:
     # distance entre le parement béton et l'axe des armatures longitudinales (m)
     d_prime: float
 
-    # type de section (type, largeur, hauteur, diamètre (m))
+    # type de section (TYPE_RECTANGULAIRE ou TYPE_CIRCULAIRE)
     type_section: str
     b: float | None = None
     h: float | None = None
