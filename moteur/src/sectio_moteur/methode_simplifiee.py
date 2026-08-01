@@ -3,6 +3,7 @@ from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from .modeles import PoteauInput, ResultatPoteau
 from .interfaces import MethodeCalculPoteauInterface
 from math import sqrt
+from math import pi
 
 TAUX_TRAVAIL_MIN = 1.1  # le seuil de marge de sécurité visé — on veut NRd/NEd ≥ 1,1, pas juste NRd ≥ NEd.
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
@@ -51,7 +52,54 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         return liste_violations
 
     def calculer(self, entree: PoteauInput) -> ResultatPoteau:
-        raise NotImplementedError
+
+        NEd = (1.35 * entree.G) + 1.5 * entree.Q
+
+        if entree.type_section == TYPE_RECTANGULAIRE:
+            if entree.b is None or entree.h is None:
+                raise DimensionsManquantesException()
+            Ac = entree.b * entree.h
+        else:
+            if entree.diametre is None:
+                raise DimensionsManquantesException()
+            Ac = pi * entree.diametre**2 / 4
+
+        fcd = entree.fck / 1.5
+        fyd = entree.fyk / 1.15
+        lambda_ = calculer_lambda(entree)
+        alpha = calculer_alpha(lambda_, entree.type_section)
+        ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
+        h_ou_d = plus_petite_dimension(entree)
+        delta = entree.d_prime / h_ou_d
+
+        if (entree.type_section == TYPE_RECTANGULAIRE and h_ou_d < 0.5) or (
+            entree.type_section == TYPE_CIRCULAIRE and h_ou_d < 0.60
+        ):
+            a, b, c = calculer_coefficients_quadratique(
+                NEd, ks, alpha, Ac, fcd, fyd, h_ou_d, delta
+            )
+            As = resoudre_as_quadratique(a, b, c)
+        else:
+            As = resoudre_as_lineaire(NEd, ks, alpha, Ac, fcd, fyd)
+
+        rho = As * 1e-4 / Ac
+        kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
+        NRd = kh * ks * alpha * (Ac * fcd * M2_MPA_VERS_KN + As * fyd * CM2_MPA_VERS_KN)
+        taux_travail = NRd / NEd
+
+        return ResultatPoteau(
+            As=As,
+            NRd=NRd,
+            taux_travail=taux_travail,
+            as_min_gouverne=False,  #! TODO: brancher le bornage As_min/As_max (module dédié, cf. page Notion "Exceptions métier et bornage") — toujours False pour l'instant
+            NEd=NEd,
+            lambda_=lambda_,
+            alpha=alpha,
+            kh=kh,
+            ks=ks,
+            rho=rho,
+            delta=delta,
+        )
 
     def verifier(self, as_propose: float, entree: PoteauInput) -> ResultatPoteau:
         raise NotImplementedError
@@ -221,7 +269,7 @@ def calculer_coefficients_quadratique(
     Ac: float,
     fcd: float,
     fyd: float,
-    h: float,
+    h_ou_d: float,
     delta: float,
 ) -> tuple[float, float, float]:
     """Calcule les coefficients a, b, c de l'équation a·As² + b·As + c = 0.
@@ -237,7 +285,7 @@ def calculer_coefficients_quadratique(
         ac: Aire de la section de béton, en m².
         fcd: Résistance de calcul du béton, en MPa.
         fyd: Résistance de calcul de l'acier, en MPa.
-        h: Plus petite dimension de la section (h ou D selon le type), en m.
+        h_ou_d: Plus petite dimension de la section (h ou D selon le type), en m.
         delta: Rapport d'/h (ou d'/D), sans dimension.
 
     Retourne :
@@ -245,11 +293,11 @@ def calculer_coefficients_quadratique(
         a est toujours négatif en pratique. Ces coefficients doivent ensuite
         être passés à resoudre_as_quadratique() pour obtenir As.
     """
-    K1 = 0.75 + 0.5 * h
+    K1 = 0.75 + 0.5 * h_ou_d
     C = 6 * K1 * delta * 1e-4 / Ac
     T = Ac * fcd * M2_MPA_VERS_KN
 
-    a = ks * alpha * C * fyd * CM2_MPA_VERS_KN
+    a = -ks * alpha * C * fyd * CM2_MPA_VERS_KN
     b = ks * alpha * (K1 * fyd * CM2_MPA_VERS_KN - C * T)
     c = ks * alpha * K1 * T - TAUX_TRAVAIL_MIN * NEd
 
