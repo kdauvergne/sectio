@@ -91,7 +91,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             As=As,
             NRd=NRd,
             taux_travail=taux_travail,
-            as_min_gouverne=False,  #! TODO: brancher le bornage As_min/As_max (module dédié, cf. page Notion "Exceptions métier et bornage") — toujours False pour l'instant
+            as_min_gouverne=False,  #! TODO: brancher le bornage As_min/As_max (cf. page Notion "Exceptions métier et bornage") — toujours False pour l'instant
             NEd=NEd,
             lambda_=lambda_,
             alpha=alpha,
@@ -102,7 +102,63 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         )
 
     def verifier(self, as_propose: float, entree: PoteauInput) -> ResultatPoteau:
-        raise NotImplementedError
+        """
+        Vérifie si une section d'acier proposée (as_propose) suffit pour le poteau décrit
+        par entree, sens inverse de calculer() avec As déjà connu.
+
+        Paramètres :
+            as_propose: Section d'acier à vérifier, en cm² (ex. valeur arrondie au nombre
+            entier de barres réellement posées, ou valeur théorique issue de calculer()).
+            entree: Caractéristiques du poteau (géométrie, matériaux, charges).
+
+        Retourne :
+            ResultatPoteau avec As=as_propose (valeur reçue, pas recalculée) et les
+            grandeurs dérivées (NRd, taux_travail, kh, rho...) évaluées pour ce As.
+        """
+
+        # Valeurs communces avec calculer()
+        NEd = (1.35 * entree.G) + 1.5 * entree.Q
+
+        if entree.type_section == TYPE_RECTANGULAIRE:
+            if entree.b is None or entree.h is None:
+                raise DimensionsManquantesException()
+            Ac = entree.b * entree.h
+        else:
+            if entree.diametre is None:
+                raise DimensionsManquantesException()
+            Ac = pi * entree.diametre**2 / 4
+
+        fcd = entree.fck / 1.5
+        fyd = entree.fyk / 1.15
+        lambda_ = calculer_lambda(entree)
+        alpha = calculer_alpha(lambda_, entree.type_section)
+        ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
+        h_ou_d = plus_petite_dimension(entree)
+        delta = entree.d_prime / h_ou_d
+
+        rho = as_propose * (1e-4 / Ac)
+        kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
+        NRd = (
+            kh
+            * ks
+            * alpha
+            * ((Ac * fcd * M2_MPA_VERS_KN) + (as_propose * fyd * CM2_MPA_VERS_KN))
+        )
+        taux_travail = NRd / NEd
+
+        return ResultatPoteau(
+            As=as_propose,
+            NRd=NRd,
+            taux_travail=taux_travail,
+            as_min_gouverne=False,
+            NEd=NEd,
+            lambda_=lambda_,
+            alpha=alpha,
+            kh=kh,
+            ks=ks,
+            rho=rho,
+            delta=delta,
+        )
 
 
 """
