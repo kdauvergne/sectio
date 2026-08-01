@@ -68,3 +68,18 @@ def test_est_applicable_fck_hors_plage():
 
     assert violations != []
     assert any("fck" in v for v in violations)
+
+
+def test_cas_reference_arche():
+    """Test officiel Arche 03-0188SSLLG_EC2 issu du PDF Arche Validation Guide 2018 FR page 119.
+    Poteau carre 0,30x0,30, lambda=32,66. G=1209 kN, Q=200 kN (120,90T et 20,00T, 1T=10kN).
+    Reference Arche (SANS marge BE, NRd=NEd) : As=34cm2 (v2018 Arche: 33,51).
+    Notre calculer() applique TAUX_TRAVAIL_MIN=1,1 (marge BE confirmee Pierre) :
+    valeurs ci-dessous recalculees avec cette marge -- pas comparables au 34cm2 du guide.
+    """
+    entree = _entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0)
+    r = MethodeSimplifiee().calculer(entree)
+
+    assert abs(r.As - 42.02) / 42.02 < 0.03
+    assert abs(r.NRd - 2125.37) / 2125.37 < 0.03
+    assert abs(r.kh - 0.8706) < 0.01
