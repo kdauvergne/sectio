@@ -13,7 +13,8 @@ __pycache__/
 .pytest_cache/
 
 # Données personnelles moteur à ne pas diffuser car licence AFNOR
-moteur/data/tables_feu.json
+moteur/src/sectio_moteur/data/tables_feu.json
+moteur/src/sectio_moteur/data/tables_enrobage.json
 
 # macOS
 .DS_Store

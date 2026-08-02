@@ -4,3 +4,7 @@ class TypeSectionInvalideException(Exception):
 
 class DimensionsManquantesException(Exception):
     pass
+
+
+class ClasseExpositionInvalideException(Exception):
+    pass

@@ -9,6 +9,18 @@ TAUX_TRAVAIL_MIN = 1.1  # le seuil de marge de sécurité visé — on veut NRd/
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
 
+DIAMETRES_NORMALISES = [
+    8,
+    10,
+    12,
+    14,
+    16,
+    20,
+    25,
+    32,
+    40,
+]  # Diamètres de barre à tester, normalisés dans le métier
+
 
 class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
@@ -415,3 +427,15 @@ def plus_petite_dimension(entree: PoteauInput) -> float:
         return entree.diametre
     else:
         raise TypeSectionInvalideException()
+
+    def choix_armatures(
+        As_theorique: float,  # cm², issu du calcul
+        As_max: float,  # cm², limite réglementaire (généralement liée à Ac)
+        b: float | None,  # cm, largeur section rectangulaire (None si circulaire)
+        h: float | None,  # cm, hauteur section rectangulaire (None si circulaire)
+        diametre: (
+            float | None
+        ),  # cm, diamètre si section circulaire (None si rectangulaire)
+        type_section: str,  # TYPE_RECTANGULAIRE ou TYPE_CIRCULAIRE
+        c_nom: float,  # cm, enrobage nominal (classe d'exposition)
+    ) -> ResultatFerraillage: ...

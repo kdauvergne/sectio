@@ -3,6 +3,11 @@ from dataclasses import dataclass
 TYPE_RECTANGULAIRE = "rectangulaire"
 TYPE_CIRCULAIRE = "circulaire"
 
+#: Classe structurale utilisée par défaut pour déterminer cmin,dur.
+CLASSE_STRUCTURALE_DEFAUT = "S4"
+#: Tolérance d'exécution Δcdev ajoutée à cmin,dur pour obtenir Cnom (cnom = cmin,dur + Δcdev) (en mm).
+DELTA_CDEV_MM = 10.0
+
 
 @dataclass(frozen=True)  # immuable
 class PoteauInput:

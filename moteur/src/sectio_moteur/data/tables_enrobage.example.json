@@ -1,0 +1,82 @@
+{
+  "TEST_XC1": {
+    "S1": {
+      "cmin_dur_mm": 10
+    },
+    "S2": {
+      "cmin_dur_mm": 10
+    },
+    "S3": {
+      "cmin_dur_mm": 15
+    },
+    "S4": {
+      "cmin_dur_mm": 20
+    },
+    "S5": {
+      "cmin_dur_mm": 25
+    },
+    "S6": {
+      "cmin_dur_mm": 30
+    }
+  },
+  "TEST_XC2": {
+    "S1": {
+      "cmin_dur_mm": 15
+    },
+    "S2": {
+      "cmin_dur_mm": 20
+    },
+    "S3": {
+      "cmin_dur_mm": 25
+    },
+    "S4": {
+      "cmin_dur_mm": 30
+    },
+    "S5": {
+      "cmin_dur_mm": 35
+    },
+    "S6": {
+      "cmin_dur_mm": 40
+    }
+  },
+  "TEST_XC3": {
+    "S1": {
+      "cmin_dur_mm": 20
+    },
+    "S2": {
+      "cmin_dur_mm": 25
+    },
+    "S3": {
+      "cmin_dur_mm": 30
+    },
+    "S4": {
+      "cmin_dur_mm": 35
+    },
+    "S5": {
+      "cmin_dur_mm": 40
+    },
+    "S6": {
+      "cmin_dur_mm": 45
+    }
+  },
+  "TEST_XC4": {
+    "S1": {
+      "cmin_dur_mm": 25
+    },
+    "S2": {
+      "cmin_dur_mm": 30
+    },
+    "S3": {
+      "cmin_dur_mm": 35
+    },
+    "S4": {
+      "cmin_dur_mm": 40
+    },
+    "S5": {
+      "cmin_dur_mm": 45
+    },
+    "S6": {
+      "cmin_dur_mm": 50
+    }
+  }
+}
