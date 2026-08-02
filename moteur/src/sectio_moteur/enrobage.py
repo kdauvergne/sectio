@@ -1,3 +1,16 @@
+"""
+Module permettant de calculer l'enrobage nominal "Cnom" à partir :
+- de la classe d'exposition du béton ;
+- de la classe structurale ;
+- d'une tolérance d'exécution.
+
+⚠️ STATUT V1 : non branché. Hypothèse cnom = d' (donnée d'entrée existante)
+pour alléger la saisie utilisateur, section "cnom".
+Ce module reste fonctionnel et testé, réactivation possible en V2
+si l'approximation cnom=d' s'avère trop pénalisante sur des cas réels
+(faux rejets FerraillageImpossibleException).
+"""
+
 import json
 from pathlib import Path
 
