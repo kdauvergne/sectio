@@ -1,4 +1,8 @@
-from .exceptions import TypeSectionInvalideException, DimensionsManquantesException
+from .exceptions import (
+    TypeSectionInvalideException,
+    DimensionsManquantesException,
+    SectionInsuffisanteException,
+)
 from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from .modeles import PoteauInput, ResultatPoteau, ResultatFerraillage
 from .interfaces import MethodeCalculPoteauInterface
@@ -447,14 +451,14 @@ def resoudre_as_quadratique(a: float, b: float, c: float) -> float:
     """
     discriminant = b**2 - (4 * a * c)
     if discriminant < 0:
-        raise ValueError("Section insuffisante.")
+        raise SectionInsuffisanteException("Section insuffisante.")
 
     racine_1 = (-b + sqrt(discriminant)) / (2 * a)
     racine_2 = (-b - sqrt(discriminant)) / (2 * a)
 
     racines_positives = [r for r in (racine_1, racine_2) if r > 0]
     if not racines_positives:
-        raise ValueError("Aucune racine positive trouvée.")
+        raise SectionInsuffisanteException("Aucune racine positive trouvée.")
 
     return min(racines_positives)
 
