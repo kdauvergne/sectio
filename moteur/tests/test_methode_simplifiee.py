@@ -65,6 +65,18 @@ def test_calculer_type_section_invalide():
         MethodeSimplifiee().calculer(entree)
 
 
+def test_verifier_reproduit_calculer():
+    entree = _entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0)
+    methode = MethodeSimplifiee()
+
+    resultat_calcule = methode.calculer(entree)
+    resultat_verifie = methode.verifier(resultat_calcule.As, entree)
+
+    assert resultat_verifie.NRd == pytest.approx(resultat_calcule.NRd)
+    assert resultat_verifie.kh == pytest.approx(resultat_calcule.kh)
+    assert resultat_verifie.rho == pytest.approx(resultat_calcule.rho)
+
+
 """ Tests est_applicable() """
 
 
