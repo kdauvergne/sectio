@@ -1,14 +1,15 @@
 from .exceptions import TypeSectionInvalideException, DimensionsManquantesException
 from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
-from .modeles import PoteauInput, ResultatPoteau
+from .modeles import PoteauInput, ResultatPoteau, ResultatFerraillage
 from .interfaces import MethodeCalculPoteauInterface
-from math import sqrt
-from math import pi
+from .enrobage import calculer_cnom, CHEMIN_DONNEES_REELLES
+from math import sqrt, pi, ceil, floor
 
 TAUX_TRAVAIL_MIN = 1.1  # le seuil de marge de sécurité visé — on veut NRd/NEd ≥ 1,1, pas juste NRd ≥ NEd.
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
 
+# Constantes utilisées dans le choix d'armatures
 DIAMETRES_NORMALISES = [
     8,
     10,
@@ -20,6 +21,9 @@ DIAMETRES_NORMALISES = [
     32,
     40,
 ]  # Diamètres de barre à tester, normalisés dans le métier
+
+ESPACEMENT_MIN_BARRES_MM = 30.0  # EC2 art.8.2(2)
+M_VERS_MM = 1000.0  # convertit b/h/diametre (m, PoteauInput) en mm
 
 
 class MethodeSimplifiee(MethodeCalculPoteauInterface):
@@ -428,14 +432,82 @@ def plus_petite_dimension(entree: PoteauInput) -> float:
     else:
         raise TypeSectionInvalideException()
 
-    def choix_armatures(
-        As_theorique: float,  # cm², issu du calcul
-        As_max: float,  # cm², limite réglementaire (généralement liée à Ac)
-        b: float | None,  # cm, largeur section rectangulaire (None si circulaire)
-        h: float | None,  # cm, hauteur section rectangulaire (None si circulaire)
-        diametre: (
-            float | None
-        ),  # cm, diamètre si section circulaire (None si rectangulaire)
-        type_section: str,  # TYPE_RECTANGULAIRE ou TYPE_CIRCULAIRE
-        c_nom: float,  # cm, enrobage nominal (classe d'exposition)
-    ) -> ResultatFerraillage: ...
+
+#! TODO
+def choix_armatures(
+    as_theorique: float,  # cm2
+    as_max: float,  # cm2
+    entree: PoteauInput,  # geometrie + type_section + d_prime
+) -> list[tuple[int, int]]:
+    """Combinaisons (n, Øl) constructibles pour un As théorique donné.
+
+    Hypothèse V1 actée : cnom = d' en m, converti en mm ici,
+    car les diamètres de barres sont en mm.
+    """
+    cnom_mm = entree.d_prime * M_VERS_MM  # M_VERS_MM = 1000.0
+
+    raise NotImplementedError
+
+
+def calculer_aire_barre(diametre_mm: float) -> float:
+    """
+    Calcule l'aire de la section d'une barre d'armature. Avec Aφ l'aire de la section et  Øl le diamètre nominal.
+    Formule : Aφ = π × Øl² / 4
+    """
+    return (pi * diametre_mm**2 / 4) / 100
+
+
+def ajuster_nombre_barres(n: int, type_section: str) -> int:
+    """
+    Ajuste le nombre de barres longitudinales selon le type de section.
+
+    Pour une section rectangulaire, le nombre de barres est rendu pair afin
+    de permettre une disposition symétrique des armatures.
+
+    Pour une section circulaire, un minimum de 6 barres est imposé afin de
+    respecter les dispositions constructives courantes des armatures.
+
+    Paramètres:
+        n (int): Nombre de barres calculé après dimensionnement.
+        type_section (str): Type de section du poteau (rectangulaire ou circulaire).
+
+    Retourne:
+        int: Nombre de barres ajusté selon les règles de disposition.
+    """
+    if type_section == TYPE_RECTANGULAIRE:
+        if n % 2 != 0:
+            n += 1
+    elif type_section == TYPE_CIRCULAIRE:
+        n = max(n, 6)
+    return n
+
+
+def calculer_n_max_geometrique(entree: PoteauInput, diametre_mm: float) -> int:
+    """
+    Calcule le nombre maximal de barres pouvant être disposées dans la section.
+
+    Paramètres:
+        entree: Données géométriques de la section.
+        diametre_mm (float): Diamètre des armatures longitudinales en mm.
+
+    Retourne:
+        int: Nombre maximal de barres admissible géométriquement.
+    """
+    if entree.type_section == TYPE_RECTANGULAIRE:
+        if entree.b is None or entree.h is None:
+            raise DimensionsManquantesException()
+        perimetre_utile = 2 * (
+            (entree.b * M_VERS_MM - 2 * entree.d_prime * M_VERS_MM)
+            + (entree.h * M_VERS_MM - 2 * entree.d_prime * M_VERS_MM)
+        )
+    elif entree.type_section == TYPE_CIRCULAIRE:
+        if entree.diametre is None:
+            raise DimensionsManquantesException()
+        perimetre_utile = pi * (
+            entree.diametre * M_VERS_MM - 2 * entree.d_prime * M_VERS_MM
+        )
+    else:
+        raise TypeSectionInvalideException()
+
+    n_max = floor(perimetre_utile / max(diametre_mm, ESPACEMENT_MIN_BARRES_MM))
+    return n_max
