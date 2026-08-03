@@ -83,16 +83,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
     def calculer(self, entree: PoteauInput) -> ResultatPoteau:
 
         NEd = (COEF_G * entree.G) + COEF_Q * entree.Q
-
-        if entree.type_section == TYPE_RECTANGULAIRE:
-            if entree.b is None or entree.h is None:
-                raise DimensionsManquantesException()
-            Ac = entree.b * entree.h
-        else:
-            if entree.diametre is None:
-                raise DimensionsManquantesException()
-            Ac = pi * entree.diametre**2 / 4
-
+        Ac = calculer_aire_beton(entree)
         fcd = entree.fck / GAMMA_C  # fcd = fck / 1,5
         fyd = entree.fyk / GAMMA_S  # fyd = fyk / 1,15
         lambda_ = calculer_lambda(entree)
@@ -145,27 +136,14 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             grandeurs dérivées (NRd, taux_travail, kh, rho...) évaluées pour ce As.
         """
 
-        # Valeurs communces avec calculer()
+        # Valeurs communes avec calculer()
         NEd = (COEF_G * entree.G) + COEF_Q * entree.Q
+        Ac = calculer_aire_beton(entree)
+        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs_communes(
+            entree
+        )
 
-        if entree.type_section == TYPE_RECTANGULAIRE:
-            if entree.b is None or entree.h is None:
-                raise DimensionsManquantesException()
-            Ac = entree.b * entree.h
-        else:
-            if entree.diametre is None:
-                raise DimensionsManquantesException()
-            Ac = pi * entree.diametre**2 / 4
-
-        fcd = entree.fck / GAMMA_C
-        fyd = entree.fyk / GAMMA_S
-        lambda_ = calculer_lambda(entree)
-        alpha = calculer_alpha(lambda_, entree.type_section)
-        ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
-        h_ou_d = plus_petite_dimension(entree)
-        delta = entree.d_prime / h_ou_d
-
-        rho = as_propose * (1e-4 / Ac)
+        rho = as_propose * 1e-4 / Ac
         kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
         NRd = (
             kh
@@ -196,6 +174,36 @@ Rôle dans le moteur : λ, α, kh, ks sont les 4 coefficients qui composent NRd 
 α, kh et ks sont des coefficients correcteurs de la norme EC2, qui ajustent la résistance théorique du poteau pour tenir compte du flambement (α), de l'épaisseur du poteau (kh) et du type d'acier (ks).
 Sans eux, impossible d'écrire l'équation en As.
 """
+
+
+def calculer_aire_beton(entree: PoteauInput) -> float:
+    """Aire de la section de béton Ac, en m².
+
+    Rectangulaire : Ac = b · h.  Circulaire : Ac = π · D² / 4.
+    """
+    if entree.type_section == TYPE_RECTANGULAIRE:
+        if entree.b is None or entree.h is None:
+            raise DimensionsManquantesException()
+        return entree.b * entree.h
+    elif entree.type_section == TYPE_CIRCULAIRE:
+        if entree.diametre is None:
+            raise DimensionsManquantesException()
+        return pi * entree.diametre**2 / 4
+    else:
+        raise TypeSectionInvalideException(entree.type_section)
+
+
+def grandeurs_communes(entree: PoteauInput) -> tuple:
+    NEd = COEF_G * entree.G + COEF_Q * entree.Q
+    Ac = calculer_aire_beton(entree)
+    fcd = entree.fck / GAMMA_C
+    fyd = entree.fyk / GAMMA_S
+    lambda_ = calculer_lambda(entree)
+    alpha = calculer_alpha(lambda_, entree.type_section)
+    ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
+    h_ou_d = plus_petite_dimension(entree)
+    delta = entree.d_prime / h_ou_d
+    return NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta
 
 
 def calculer_lambda(entree: PoteauInput) -> float:

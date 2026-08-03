@@ -1,6 +1,6 @@
 from dataclasses import replace
 import pytest
-from sectio_moteur.methode_simplifiee import calculer_lambda
+from sectio_moteur.methode_simplifiee import calculer_lambda, TAUX_TRAVAIL_MIN
 from sectio_moteur.modeles import PoteauInput, TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from sectio_moteur.exceptions import (
     TypeSectionInvalideException,
@@ -56,6 +56,13 @@ def test_calculer_lambda_dimensions_manquantes_circulaire():
     entree = _entree(type_section=TYPE_CIRCULAIRE, diametre=None)
     with pytest.raises(DimensionsManquantesException):
         calculer_lambda(entree)
+
+
+def test_calculer_type_section_invalide():
+    entree = _entree(type_section="rectangualire")
+
+    with pytest.raises(TypeSectionInvalideException):
+        MethodeSimplifiee().calculer(entree)
 
 
 """ Tests est_applicable() """
