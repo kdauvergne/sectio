@@ -96,7 +96,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             entree.type_section == TYPE_CIRCULAIRE and h_ou_d < 0.60
         ):
             a, b, c = calculer_coefficients_quadratique(
-                NEd, ks, alpha, Ac, fcd, fyd, h_ou_d, delta
+                NEd, ks, alpha, Ac, fcd, fyd, h_ou_d, delta, entree.type_section
             )
             As = resoudre_as_quadratique(a, b, c)
         else:
@@ -274,7 +274,9 @@ def calculer_kh(h_ou_d: float, rho: float, delta: float, type_section: str) -> f
     """
     if type_section == TYPE_RECTANGULAIRE:
         if h_ou_d < 0.5:
-            return (KH_ORDONNEE_RECT + KH_PENTE * h_ou_d) * (1 - 6 * rho * delta)
+            return (KH_ORDONNEE_RECT + KH_PENTE * h_ou_d) * (
+                1 - KH_FACTEUR_RHO_DELTA_RECT * rho * delta
+            )
         else:
             return 1.0
     elif type_section == TYPE_CIRCULAIRE:
@@ -366,30 +368,54 @@ def calculer_coefficients_quadratique(
     fyd: float,
     h_ou_d: float,
     delta: float,
+    type_section: str,
 ) -> tuple[float, float, float]:
     """Calcule les coefficients a, b, c de l'équation a·As² + b·As + c = 0.
 
-    Ramène la formule NRd = kh·ks·α·(Ac·fcd + As·fyd), où kh dépend de As via
-    kh = (0,75+0,5h)·(1−6·ρ·δ), à une équation du second degré en As, avec
-    NRd visé = TAUX_TRAVAIL_MIN·NEd.
+    Ramène la formule NRd = kh·ks·α·(Ac·fcd + As·fyd) à une équation du second
+    degré en As, avec NRd visé = TAUX_TRAVAIL_MIN·NEd. Le second degré vient de
+    ce que As apparaît deux fois : dans la part acier, et dans kh via ρ = As/Ac.
+
+    En posant kh = K1 − C·As , le développement du produit
+    ks·α·(K1 − C·As)·(T + As·fyd) donne les trois coefficients.
+
+    Les valeurs de K1 et du facteur devant ρ·δ dépendent du type de section :
+        Rectangulaire : kh = (0,75 + 0,5·h)·(1 − 6·ρ·δ)
+        Circulaire    : kh = (0,70 + 0,5·D)·(1 − 8·ρ·δ)
+    Elles sont lues dans les constantes KH_* du module, partagées avec
+    calculer_kh() : les deux fonctions doivent toujours décrire le même kh.
 
     Paramètres :
         NEd: Effort normal de calcul, en kN.
         ks: Coefficient ks (sans dimension).
         alpha: Coefficient α (sans dimension).
-        ac: Aire de la section de béton, en m².
+        Ac: Aire de la section de béton, en m².
         fcd: Résistance de calcul du béton, en MPa.
         fyd: Résistance de calcul de l'acier, en MPa.
         h_ou_d: Plus petite dimension de la section (h ou D selon le type), en m.
         delta: Rapport d'/h (ou d'/D), sans dimension.
+        type_section: TYPE_RECTANGULAIRE ou TYPE_CIRCULAIRE.
 
     Retourne :
         Tuple (a, b, c), les coefficients de l'équation du second degré.
-        a est toujours négatif en pratique. Ces coefficients doivent ensuite
-        être passés à resoudre_as_quadratique() pour obtenir As.
+        a est toujours négatif en pratique. c vaut la résistance du béton seul
+        moins la charge visée : c ≥ 0 signifie que le béton suffit sans acier.
+        Ces coefficients doivent ensuite être passés à resoudre_as_quadratique().
+
+    Lève :
+        TypeSectionInvalideException: si type_section n'est ni TYPE_RECTANGULAIRE
+        ni TYPE_CIRCULAIRE.
     """
-    K1 = 0.75 + 0.5 * h_ou_d
-    C = 6 * K1 * delta * 1e-4 / Ac
+    if type_section == TYPE_RECTANGULAIRE:
+        K1 = KH_ORDONNEE_RECT + KH_PENTE * h_ou_d
+        facteur_rho_delta = KH_FACTEUR_RHO_DELTA_RECT
+    elif type_section == TYPE_CIRCULAIRE:
+        K1 = KH_ORDONNEE_CIRC + KH_PENTE * h_ou_d
+        facteur_rho_delta = KH_FACTEUR_RHO_DELTA_CIRC
+    else:
+        raise TypeSectionInvalideException(type_section)
+
+    C = facteur_rho_delta * K1 * delta * 1e-4 / Ac
     T = Ac * fcd * M2_MPA_VERS_KN
 
     a = -ks * alpha * C * fyd * CM2_MPA_VERS_KN

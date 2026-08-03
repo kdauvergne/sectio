@@ -102,3 +102,35 @@ def test_cas_reference_arche():
     assert abs(r.As - 42.02) / 42.02 < 0.03
     assert abs(r.NRd - 2125.37) / 2125.37 < 0.03
     assert abs(r.kh - 0.8706) < 0.01
+
+
+@pytest.mark.parametrize(
+    "entree",
+    [
+        # rectangulaire, branche quadratique — cas de référence Arche
+        _entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0),
+        # circulaire, branche quadratique (D < 0,60 m)
+        _entree(
+            type_section=TYPE_CIRCULAIRE,
+            diametre=0.40,
+            b=None,
+            h=None,
+            L0=3.0,
+            G=900.0,
+            Q=200.0,
+        ),
+        # circulaire, branche linéaire (D >= 0,60 m)
+        _entree(
+            type_section=TYPE_CIRCULAIRE,
+            diametre=0.70,
+            b=None,
+            h=None,
+            L0=3.0,
+            G=2500.0,
+            Q=500.0,
+        ),
+    ],
+)
+def test_calculer_atteint_le_taux_de_travail_vise(entree):
+    resultat = MethodeSimplifiee().calculer(entree)
+    assert resultat.taux_travail == pytest.approx(TAUX_TRAVAIL_MIN, rel=1e-9)
