@@ -4,7 +4,7 @@ from .exceptions import (
     SectionInsuffisanteException,
 )
 from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
-from .modeles import PoteauInput, ResultatPoteau, ResultatFerraillage
+from .modeles import PoteauInput, ResultatPoteau
 from .interfaces import MethodeCalculPoteauInterface
 from math import sqrt, pi, floor
 
@@ -436,6 +436,11 @@ def resoudre_as_quadratique(a: float, b: float, c: float) -> float:
     NRd = kh·ks·α·(Ac·fcd + As·fyd)). a, b, c sont déjà calculés par
     calculer_coefficients_quadratique() et ne dépendent plus de rien d'autre ici.
 
+    a étant négatif, la parabole admet deux racines : la plus petite est la
+    solution physique, la seconde est un artefact (branche descendante, plus
+    d'acier que de béton). Si c >= 0, le béton seul suffit et la seule racine
+    positive est cet artefact — d'où le retour anticipé à 0.0.
+
     Paramètres :
         a: Coefficient du second degré (toujours négatif en pratique).
         b: Coefficient du premier degré.
@@ -449,6 +454,8 @@ def resoudre_as_quadratique(a: float, b: float, c: float) -> float:
             qu'aucune section d'acier ne permet d'atteindre le taux de travail
             visé (section insuffisante).
     """
+    if c >= 0:
+        return 0.0
     discriminant = b**2 - (4 * a * c)
     if discriminant < 0:
         raise SectionInsuffisanteException("Section insuffisante.")
