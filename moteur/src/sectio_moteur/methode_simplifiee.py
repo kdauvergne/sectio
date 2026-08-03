@@ -2,12 +2,25 @@ from .exceptions import TypeSectionInvalideException, DimensionsManquantesExcept
 from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from .modeles import PoteauInput, ResultatPoteau, ResultatFerraillage
 from .interfaces import MethodeCalculPoteauInterface
-from .enrobage import calculer_cnom, CHEMIN_DONNEES_REELLES
-from math import sqrt, pi, ceil, floor
+from math import sqrt, pi, floor
 
 TAUX_TRAVAIL_MIN = 1.1  # le seuil de marge de sécurité visé — on veut NRd/NEd ≥ 1,1, pas juste NRd ≥ NEd.
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
+
+COEF_G = 1.35  # NEd = 1.35G + 1.5Q
+COEF_Q = 1.5  # NEd = 1.35G + 1.5Q
+GAMMA_C = 1.5  # fcd = fck/γc où γc = 1.5
+GAMMA_S = 1.15  # fyd = fyk / 1,15
+D_PRIME_MAX_M = 0.10  # d' max en mètres = 100 * 0.001
+
+# rectangulaire : kh = (0.75 + 0.5 * h_ou_d) * (1 - 6 * rho * delta)
+KH_ORDONNEE_RECT = 0.75
+KH_PENTE = 0.5
+KH_FACTEUR_RHO_DELTA_RECT = 6
+# circulaire : (0.7 + 0.5 * h_ou_d) * (1 - 8 * rho * delta)
+KH_ORDONNEE_CIRC = 0.7
+KH_FACTEUR_RHO_DELTA_CIRC = 8
 
 # Constantes utilisées dans le choix d'armatures
 DIAMETRES_NORMALISES = [
@@ -47,7 +60,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         lambda_ = calculer_lambda(entree)
 
         dim_ref = plus_petite_dimension(entree)
-        limite_d_prime = min(0.3 * dim_ref, 100 * 0.001)
+        limite_d_prime = min(0.3 * dim_ref, D_PRIME_MAX_M)
 
         if lambda_ > 120:
             liste_violations.append(f"λ={lambda_:.2f} dépasse la limite de 120")
@@ -69,7 +82,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
     def calculer(self, entree: PoteauInput) -> ResultatPoteau:
 
-        NEd = (1.35 * entree.G) + 1.5 * entree.Q
+        NEd = (COEF_G * entree.G) + COEF_Q * entree.Q
 
         if entree.type_section == TYPE_RECTANGULAIRE:
             if entree.b is None or entree.h is None:
@@ -80,8 +93,8 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
                 raise DimensionsManquantesException()
             Ac = pi * entree.diametre**2 / 4
 
-        fcd = entree.fck / 1.5
-        fyd = entree.fyk / 1.15
+        fcd = entree.fck / GAMMA_C  # fcd = fck / 1,5
+        fyd = entree.fyk / GAMMA_S  # fyd = fyk / 1,15
         lambda_ = calculer_lambda(entree)
         alpha = calculer_alpha(lambda_, entree.type_section)
         ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
@@ -133,7 +146,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         """
 
         # Valeurs communces avec calculer()
-        NEd = (1.35 * entree.G) + 1.5 * entree.Q
+        NEd = (COEF_G * entree.G) + COEF_Q * entree.Q
 
         if entree.type_section == TYPE_RECTANGULAIRE:
             if entree.b is None or entree.h is None:
@@ -144,8 +157,8 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
                 raise DimensionsManquantesException()
             Ac = pi * entree.diametre**2 / 4
 
-        fcd = entree.fck / 1.5
-        fyd = entree.fyk / 1.15
+        fcd = entree.fck / GAMMA_C
+        fyd = entree.fyk / GAMMA_S
         lambda_ = calculer_lambda(entree)
         alpha = calculer_alpha(lambda_, entree.type_section)
         ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
@@ -253,12 +266,14 @@ def calculer_kh(h_ou_d: float, rho: float, delta: float, type_section: str) -> f
     """
     if type_section == TYPE_RECTANGULAIRE:
         if h_ou_d < 0.5:
-            return (0.75 + 0.5 * h_ou_d) * (1 - 6 * rho * delta)
+            return (KH_ORDONNEE_RECT + KH_PENTE * h_ou_d) * (1 - 6 * rho * delta)
         else:
             return 1.0
     elif type_section == TYPE_CIRCULAIRE:
         if h_ou_d < 0.60:
-            return (0.7 + 0.5 * h_ou_d) * (1 - 8 * rho * delta)
+            return (KH_ORDONNEE_CIRC + KH_PENTE * h_ou_d) * (
+                1 - KH_FACTEUR_RHO_DELTA_CIRC * rho * delta
+            )
         else:
             return 1.0
     else:
