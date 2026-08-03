@@ -86,15 +86,9 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
     def calculer(self, entree: PoteauInput) -> ResultatPoteau:
 
-        NEd = (COEF_G * entree.G) + COEF_Q * entree.Q
-        Ac = calculer_aire_beton(entree)
-        fcd = entree.fck / GAMMA_C  # fcd = fck / 1,5
-        fyd = entree.fyk / GAMMA_S  # fyd = fyk / 1,15
-        lambda_ = calculer_lambda(entree)
-        alpha = calculer_alpha(lambda_, entree.type_section)
-        ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
-        h_ou_d = plus_petite_dimension(entree)
-        delta = entree.d_prime / h_ou_d
+        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs_communes(
+            entree
+        )
 
         if (entree.type_section == TYPE_RECTANGULAIRE and h_ou_d < 0.5) or (
             entree.type_section == TYPE_CIRCULAIRE and h_ou_d < 0.60
@@ -140,9 +134,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             grandeurs dérivées (NRd, taux_travail, kh, rho...) évaluées pour ce As.
         """
 
-        # Valeurs communes avec calculer()
-        NEd = (COEF_G * entree.G) + COEF_Q * entree.Q
-        Ac = calculer_aire_beton(entree)
+        # grandeurs communes avec calculer()
         NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs_communes(
             entree
         )
@@ -444,15 +436,15 @@ def resoudre_as_quadratique(a: float, b: float, c: float) -> float:
     Paramètres :
         a: Coefficient du second degré (toujours négatif en pratique).
         b: Coefficient du premier degré.
-        c: Coefficient constant.
+        c: Coefficient constant, égal à la résistance du béton seul moins la charge visée
 
     Retourne :
-        As, en cm², non arrondi — la plus petite racine positive de l'équation.
+        As, en cm², non arrondi — la plus petite racine positive, ou 0.0 si
+        aucun acier n'est requis par la résistance (As,min prendra le relais).
 
     Erreurs :
-        ValueError: Si le discriminant (b² − 4ac) est négatif, ce qui signifie
-            qu'aucune section d'acier ne permet d'atteindre le taux de travail
-            visé (section insuffisante).
+        SectionInsuffisanteException: Si le discriminant (b² − 4ac) est négatif,
+            aucune section d'acier ne permet d'atteindre le taux de travail visé.
     """
     if c >= 0:
         return 0.0
