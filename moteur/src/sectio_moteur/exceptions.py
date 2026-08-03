@@ -8,3 +8,7 @@ class DimensionsManquantesException(Exception):
 
 class ClasseExpositionInvalideException(Exception):
     pass
+
+
+class SectionInsuffisanteException(Exception):
+    pass
