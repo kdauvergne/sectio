@@ -8,7 +8,6 @@ from .modeles import PoteauInput, ResultatPoteau
 from .interfaces import MethodeCalculPoteauInterface
 from math import sqrt, pi, floor
 
-TAUX_TRAVAIL_MIN = 1.1  # le seuil de marge de sécurité visé — on veut NRd/NEd ≥ 1,1, pas juste NRd ≥ NEd.
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
 
@@ -101,11 +100,22 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             entree.type_section == TYPE_CIRCULAIRE and h_ou_d < 0.60
         ):
             a, b, c = calculer_coefficients_quadratique(
-                NEd, ks, alpha, Ac, fcd, fyd, h_ou_d, delta, entree.type_section
+                NEd,
+                ks,
+                alpha,
+                Ac,
+                fcd,
+                fyd,
+                h_ou_d,
+                delta,
+                entree.type_section,
+                entree.taux_travail_min,
             )
             As = resoudre_as_quadratique(a, b, c)
         else:
-            As = resoudre_as_lineaire(NEd, ks, alpha, Ac, fcd, fyd)
+            As = resoudre_as_lineaire(
+                NEd, ks, alpha, Ac, fcd, fyd, entree.taux_travail_min
+            )
 
         rho = As * 1e-4 / Ac
         kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
@@ -333,18 +343,24 @@ def calculer_ks(fyk: float, lambda_: float, type_section: str) -> float:
 
 
 def resoudre_as_lineaire(
-    NEd: float, ks: float, alpha: float, Ac: float, fcd: float, fyd: float
+    NEd: float,
+    ks: float,
+    alpha: float,
+    Ac: float,
+    fcd: float,
+    fyd: float,
+    taux_travail_min: float,
 ) -> float:
     """
     Résout la section d'acier (As) nécessaire, cas linéaire (h≥0,50m, kh=1 fixe).
 
     Isole As dans NRd = ks·α·(Ac·fcd·M2_MPA_VERS_KN + As·fyd·CM2_MPA_VERS_KN),
-    avec NRd visé = TAUX_TRAVAIL_MIN·NEd.
+    avec NRd visé = taux_travail_min·NEd.
     On isole As car c'est l'inconnue à trouver : on connaît la charge à reprendre
     (NEd) et on cherche combien d'acier il faut pour que la résistance du poteau
-    (NRd) atteigne au moins TAUX_TRAVAIL_MIN·NEd.
+    (NRd) atteigne au moins taux_travail_min·NEd.
 
-    Formule isolée : As = (TAUX_TRAVAIL_MIN·NEd/(ks·α) − Ac·fcd·M2_MPA_VERS_KN) / (fyd·CM2_MPA_VERS_KN)
+    Formule isolée : As = (taux_travail_min·NEd/(ks·α) − Ac·fcd·M2_MPA_VERS_KN) / (fyd·CM2_MPA_VERS_KN)
 
     Paramètres :
         NEd: Effort normal de calcul, en kN
@@ -357,7 +373,7 @@ def resoudre_as_lineaire(
     Retourne :
         As, en cm², non arrondi.
     """
-    return (TAUX_TRAVAIL_MIN * NEd / (ks * alpha) - Ac * fcd * M2_MPA_VERS_KN) / (
+    return (taux_travail_min * NEd / (ks * alpha) - Ac * fcd * M2_MPA_VERS_KN) / (
         fyd * CM2_MPA_VERS_KN
     )
 
@@ -419,11 +435,12 @@ def calculer_coefficients_quadratique(
     h_ou_d: float,
     delta: float,
     type_section: str,
+    taux_travail_min: float,
 ) -> tuple[float, float, float]:
     """Calcule les coefficients a, b, c de l'équation a·As² + b·As + c = 0.
 
     Ramène la formule NRd = kh·ks·α·(Ac·fcd + As·fyd) à une équation du second
-    degré en As, avec NRd visé = TAUX_TRAVAIL_MIN·NEd. Le second degré vient de
+    degré en As, avec NRd visé = taux_travail_min ·NEd. Le second degré vient de
     ce que As apparaît deux fois : dans la part acier, et dans kh via ρ = As/Ac.
 
     En posant kh = K1 − C·As , le développement du produit
@@ -445,6 +462,7 @@ def calculer_coefficients_quadratique(
         h_ou_d: Plus petite dimension de la section (h ou D selon le type), en m.
         delta: Rapport d'/h (ou d'/D), sans dimension.
         type_section: TYPE_RECTANGULAIRE ou TYPE_CIRCULAIRE.
+        taux_travail_min: seuil de marge de sécurité minimum visé
 
     Retourne :
         Tuple (a, b, c), les coefficients de l'équation du second degré.
@@ -470,7 +488,7 @@ def calculer_coefficients_quadratique(
 
     a = -ks * alpha * C * fyd * CM2_MPA_VERS_KN
     b = ks * alpha * (K1 * fyd * CM2_MPA_VERS_KN - C * T)
-    c = ks * alpha * K1 * T - TAUX_TRAVAIL_MIN * NEd
+    c = ks * alpha * K1 * T - taux_travail_min * NEd
 
     return (a, b, c)
 
