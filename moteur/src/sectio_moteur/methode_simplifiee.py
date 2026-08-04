@@ -42,6 +42,13 @@ DIAMETRES_NORMALISES = [
 ESPACEMENT_MIN_BARRES_MM = 30.0  # EC2 art.8.2(2)
 M_VERS_MM = 1000.0  # convertit b/h/diametre (m, PoteauInput) en mm
 
+# Constantes de conversion d'unité pour As,min As,max
+RATIO_AS_MIN_EFFORT = 0.10
+RATIO_AS_MIN_GEOMETRIQUE = 0.002
+RATIO_AS_MAX = 0.04
+KN_PAR_MPA_VERS_CM2 = 10.0  # (kN / MPa) -> cm2
+M2_VERS_CM2 = 1e4  # m2 -> cm2
+
 
 class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
@@ -353,6 +360,53 @@ def resoudre_as_lineaire(
     return (TAUX_TRAVAIL_MIN * NEd / (ks * alpha) - Ac * fcd * M2_MPA_VERS_KN) / (
         fyd * CM2_MPA_VERS_KN
     )
+
+
+def calculer_as_min(NEd: float, fyd: float, Ac: float) -> float:
+    """As,min = max(0,10·NEd/fyd ; 0,002·Ac), en cm².
+
+    NEd en kN, fyd en MPa, Ac en m². Retour en cm².
+    Le max retient le critère le plus contraignant des deux (effort et
+    section minimale géométrique).
+    """
+    terme_effort = RATIO_AS_MIN_EFFORT * (NEd / fyd) * KN_PAR_MPA_VERS_CM2
+    terme_geometrique = RATIO_AS_MIN_GEOMETRIQUE * Ac * M2_VERS_CM2
+    return max(terme_effort, terme_geometrique)
+
+
+def calculer_as_max(Ac: float) -> float:
+    """As,max = 0,04·Ac, en cm².
+
+    Ac en m². Au-delà, le béton ne peut plus circuler correctement
+    entre les barres.
+    """
+    return RATIO_AS_MAX * Ac * M2_VERS_CM2
+
+
+def borner_as(as_brut: float, as_min: float, as_max: float) -> tuple[float, bool]:
+    """Borne un As brut aux limites réglementaires As,min / As,max.
+
+        as_brut: As calculé par resoudre_as_lineaire/quadratique, en cm².
+        as_min: borne inférieure réglementaire, en cm² (calculer_as_min).
+        as_max: borne supérieure réglementaire, en cm² (calculer_as_max).
+
+    Retourne :
+        Un couple (as_final, as_min_gouverne). as_min_gouverne vaut True
+        quand as_brut était en dessous du minimum et a été remplacé par
+        as_min ; False quand as_brut était déjà conforme.
+
+    Erreurs :
+        SectionInsuffisanteException: si as_brut dépasse as_max, la section
+        béton ne peut pas reprendre l'effort demandé.
+    """
+    if as_brut > as_max:
+        raise SectionInsuffisanteException(
+            "As dépasse As,max", as_calcule=as_brut, as_max=as_max
+        )
+    elif as_brut < as_min:
+        return as_min, True
+    else:
+        return as_brut, False
 
 
 def calculer_coefficients_quadratique(
