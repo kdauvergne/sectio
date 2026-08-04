@@ -6,7 +6,9 @@ TYPE_CIRCULAIRE = "circulaire"
 #: Classe structurale utilisée par défaut pour déterminer cmin,dur.
 CLASSE_STRUCTURALE_DEFAUT = "S4"
 #: Tolérance d'exécution Δcdev ajoutée à cmin,dur pour obtenir Cnom (cnom = cmin,dur + Δcdev) (en mm).
-DELTA_CDEV_MM = 10.0
+DELTA_CDEV_MM = 5.0
+
+TAUX_TRAVAIL_MIN_DEFAUT = 1.0  # Seuil de marge de sécurité visé. On vise NRd = NEd par défaut. L'utilisateur pourra changer ce coefficient.
 
 
 @dataclass(frozen=True)  # immuable
@@ -42,6 +44,9 @@ class PoteauInput:
     h: float | None = None
     diametre: float | None = None
 
+    # seuil de marge de sécurité visé. Par défaut 1.0.
+    taux_travail_min: float = TAUX_TRAVAIL_MIN_DEFAUT
+
     # module feu (R30/R60/R120, etc)
     duree_resistance_feu: str | None = None
     expose_un_seul_cote: bool = False
@@ -59,7 +64,6 @@ class ResultatPoteau:
     # résultat principal
     As: float  # Aire de la section d'armatures - cm2
     NRd: float  # Force portante - kN
-    taux_travail: float  # NRd / NEd >= 1,1 (Force / Effort)
     as_min_gouverne: bool  # Aire de la section minimale d'armatures
 
     # valeurs intermédiaires
@@ -70,6 +74,8 @@ class ResultatPoteau:
     ks: float
     rho: float  # taux d'amatures
     delta: float  # d_prime / h (ou D) — position relative des armatures
+
+    taux_travail: float  # NRd / NEd — valeur obtenue
 
     # armatures transversales - unité : mm
     diametre_cadres: float | None = None
