@@ -83,6 +83,33 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         return liste_violations
 
     def calculer(self, entree: PoteauInput) -> ResultatPoteau:
+        """Résout la section d'acier As nécessaire pour un poteau donné.
+
+        Enchaînement :
+            1. rejet si le poteau sort du domaine de la méthode simplifiée
+            2. résolution de As (branche linéaire ou quadratique selon la
+                plus petite dimension de la section)
+            3. bornage réglementaire As,min / As,max
+            4. assemblage du résultat (armatures comprises)
+
+        Contrairement à verifier(), calculer() applique elle-même le bornage :
+        As trop faible est remonté à As,min (as_min_gouverne=True), As trop
+        élevé provoque un rejet.
+
+        Paramètres :
+            entree: caractéristiques du poteau (géométrie, matériaux, charges).
+
+        Retourne :
+            ResultatPoteau complet : As retenu, NRd, taux de travail,
+            grandeurs intermédiaires et armatures (barres + cadres).
+
+        Erreurs :
+            MethodeNonApplicableException: poteau hors domaine d'application.
+            SectionInsuffisanteException: As requis dépasse As,max.
+            FerraillageImpossibleException: aucune disposition de barres réelles
+            ne convient pour le As retenu.
+        """
+
         # rejet explicite si le poteau sort du domaine de la méthode simplifiée
         violations = self.est_applicable(entree)
         if violations:
@@ -125,46 +152,61 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
     def verifier(self, as_propose: float, entree: PoteauInput) -> ResultatPoteau:
         """
-        Vérifie si une section d'acier proposée (as_propose) suffit pour le poteau décrit
-        par entree, sens inverse de calculer() avec As déjà connu.
+        Vérifie si une section d'acier proposée (as_propose) suffit pour le poteau.
+
+        Sens inverse de calculer() : As est déjà connu, on évalue les grandeurs
+        qui en découlent (NRd, taux_travail...). Contrairement à calculer(),
+        ne corrige jamais As : un dépassement de borne est signalé, jamais
+        substitué silencieusement.
+
+        Enchaînement :
+            1. rejet si le poteau sort du domaine de la méthode simplifiée
+            2. calcul des bornes réglementaires As,min / As,max
+            3. rejet si as_propose dépasse As,max (aucune substitution)
+            4. assemblage du résultat sur as_propose tel quel
 
         Paramètres :
-            as_propose: Section d'acier à vérifier, en cm² (ex. valeur arrondie au nombre
-            entier de barres réellement posées, ou valeur théorique issue de calculer()).
-            entree: Caractéristiques du poteau (géométrie, matériaux, charges).
+            as_propose: section d'acier à vérifier, en cm² (ex. valeur arrondie
+            au nombre entier de barres réellement posées, ou valeur théorique
+            issue de calculer()).
+            entree: caractéristiques du poteau (géométrie, matériaux, charges).
 
         Retourne :
-            ResultatPoteau avec As=as_propose (valeur reçue, pas recalculée) et les
-            grandeurs dérivées (NRd, taux_travail, kh, rho...) évaluées pour ce As.
+            ResultatPoteau avec As=as_propose (valeur reçue, pas recalculée)
+            et les grandeurs dérivées évaluées pour ce As.
+
+            as_min_gouverne a ici un sens différent de calculer() : il indique
+            que as_propose est au niveau ou en dessous du minimum réglementaire
+            (une alerte), pas qu'une substitution a eu lieu.
+
+        Erreurs :
+            MethodeNonApplicableException: poteau hors domaine d'application.
+            SectionInsuffisanteException: as_propose dépasse As,max.
+            FerraillageImpossibleException: aucune disposition de barres réelles
+            ne convient pour as_propose.
         """
 
+        # rejet explicite si le poteau sort du domaine de la méthode simplifiée
+        violations = self.est_applicable(entree)
+        if violations:
+            raise MethodeNonApplicableException(violations)
+
         # grandeurs communes avec calculer()
-        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs_communes(
-            entree
-        )
+        grandeurs = grandeurs_communes(entree)
+        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs
 
-        rho = as_propose * 1e-4 / Ac
-        kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
-        NRd = (
-            kh
-            * ks
-            * alpha
-            * ((Ac * fcd * M2_MPA_VERS_KN) + (as_propose * fyd * CM2_MPA_VERS_KN))
-        )
-        taux_travail = NRd / NEd
+        # mêmes bornes que calculer(), mais AUCUNE substitution ici
+        as_min = calculer_as_min(NEd, fyd, Ac)
+        as_max = calculer_as_max(Ac)
+        if as_propose > as_max:
+            raise SectionInsuffisanteException(
+                "As proposé dépasse As,max", as_calcule=as_propose, as_max=as_max
+            )
+        # drapeau d'alerte : le ferraillage proposé est au niveau ou sous le minimum
+        as_min_gouverne = as_propose <= as_min
 
-        return ResultatPoteau(
-            As=as_propose,
-            NRd=NRd,
-            taux_travail=taux_travail,
-            as_min_gouverne=False,
-            NEd=NEd,
-            lambda_=lambda_,
-            alpha=alpha,
-            kh=kh,
-            ks=ks,
-            rho=rho,
-            delta=delta,
+        return assembler_resultat(
+            as_propose, as_min_gouverne, as_max, entree, grandeurs
         )
 
 
