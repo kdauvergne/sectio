@@ -5,7 +5,7 @@ from .exceptions import (
     TypeSectionInvalideException,
     FerraillageImpossibleException,
 )
-from .methode_simplifiee import plus_petite_dimension
+from .geometrie import plus_petite_dimension
 from math import pi, floor, ceil
 
 # Constantes utilisées dans le choix d'armatures

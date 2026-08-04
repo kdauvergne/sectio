@@ -2,11 +2,18 @@ from .exceptions import (
     TypeSectionInvalideException,
     DimensionsManquantesException,
     SectionInsuffisanteException,
+    MethodeNonApplicableException,
 )
 from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from .modeles import PoteauInput, ResultatPoteau
 from .interfaces import MethodeCalculPoteauInterface
-from math import sqrt, pi, floor
+from .geometrie import plus_petite_dimension, calculer_aire_beton
+from .choix_armatures import (
+    choix_armatures,
+    choisir_combinaison_par_defaut,
+    calculer_armatures_transversales,
+)
+from math import sqrt, floor
 
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
@@ -76,9 +83,16 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         return liste_violations
 
     def calculer(self, entree: PoteauInput) -> ResultatPoteau:
+        # rejet explicite si le poteau sort du domaine de la méthode simplifiée
+        violations = self.est_applicable(entree)
+        if violations:
+            raise MethodeNonApplicableException(violations)
 
-        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs_communes(
+        grandeurs = grandeurs_communes(
             entree
+        )  # on garde le tuple complet, car assembler_resultat l'attend en paramètre
+        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = (
+            grandeurs  # décompacte aussi en 9 variables, utilisées plus bas pour résoudre As
         )
 
         if (entree.type_section == TYPE_RECTANGULAIRE and h_ou_d < 0.5) or (
@@ -101,25 +115,13 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             As = resoudre_as_lineaire(
                 NEd, ks, alpha, Ac, fcd, fyd, entree.taux_travail_min
             )
+        # bornes réglementaires, calculées à partir de l'effort et de la section
+        as_min = calculer_as_min(NEd, fyd, Ac)
+        as_max = calculer_as_max(Ac)
+        # corrige As si hors bornes ; lève SectionInsuffisanteException si trop grand
+        As, as_min_gouverne = borner_as(As, as_min, as_max)
 
-        rho = As * 1e-4 / Ac
-        kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
-        NRd = kh * ks * alpha * (Ac * fcd * M2_MPA_VERS_KN + As * fyd * CM2_MPA_VERS_KN)
-        taux_travail = NRd / NEd
-
-        return ResultatPoteau(
-            As=As,
-            NRd=NRd,
-            taux_travail=taux_travail,
-            as_min_gouverne=False,  #! TODO: brancher le bornage As_min/As_max (cf. page Notion "Exceptions métier et bornage") — toujours False pour l'instant
-            NEd=NEd,
-            lambda_=lambda_,
-            alpha=alpha,
-            kh=kh,
-            ks=ks,
-            rho=rho,
-            delta=delta,
-        )
+        return assembler_resultat(As, as_min_gouverne, as_max, entree, grandeurs)
 
     def verifier(self, as_propose: float, entree: PoteauInput) -> ResultatPoteau:
         """
@@ -172,23 +174,6 @@ Rôle dans le moteur : λ, α, kh, ks sont les 4 coefficients qui composent NRd 
 α, kh et ks sont des coefficients correcteurs de la norme EC2, qui ajustent la résistance théorique du poteau pour tenir compte du flambement (α), de l'épaisseur du poteau (kh) et du type d'acier (ks).
 Sans eux, impossible d'écrire l'équation en As.
 """
-
-
-def calculer_aire_beton(entree: PoteauInput) -> float:
-    """Aire de la section de béton Ac, en m².
-
-    Rectangulaire : Ac = b · h.  Circulaire : Ac = π · D² / 4.
-    """
-    if entree.type_section == TYPE_RECTANGULAIRE:
-        if entree.b is None or entree.h is None:
-            raise DimensionsManquantesException()
-        return entree.b * entree.h
-    elif entree.type_section == TYPE_CIRCULAIRE:
-        if entree.diametre is None:
-            raise DimensionsManquantesException()
-        return pi * entree.diametre**2 / 4
-    else:
-        raise TypeSectionInvalideException(entree.type_section)
 
 
 def grandeurs_communes(entree: PoteauInput) -> tuple:
@@ -410,6 +395,50 @@ def borner_as(as_brut: float, as_min: float, as_max: float) -> tuple[float, bool
         return as_brut, False
 
 
+def assembler_resultat(
+    As: float,
+    as_min_gouverne: bool,
+    as_max: float,
+    entree: PoteauInput,
+    grandeurs: tuple,
+) -> ResultatPoteau:
+    """Construit le ResultatPoteau à partir d'un As définitif.
+
+    Seul endroit du moteur où rho, kh, NRd, taux_travail et les armatures
+    sont calculés. Appelée par calculer() ET par verifier().
+    """
+    NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs
+    rho = As * 1e-4 / Ac
+    kh = calculer_kh(h_ou_d, rho, delta, entree.type_section)
+    NRd = kh * ks * alpha * (Ac * fcd * M2_MPA_VERS_KN + As * fyd * CM2_MPA_VERS_KN)
+    taux_travail = NRd / NEd
+
+    combinaisons = choix_armatures(As, as_max, entree)
+    n, diametre_l = choisir_combinaison_par_defaut(combinaisons)
+
+    diametre_cadre, e_central, e_extremites = calculer_armatures_transversales(
+        diametre_l, entree
+    )
+    return ResultatPoteau(
+        As=As,
+        NRd=NRd,
+        taux_travail=taux_travail,
+        as_min_gouverne=as_min_gouverne,
+        NEd=NEd,
+        lambda_=lambda_,
+        alpha=alpha,
+        kh=kh,
+        ks=ks,
+        rho=rho,
+        delta=delta,
+        diametre_cadres=diametre_cadre,
+        espacement_central=e_central,
+        espacement_extremites=e_extremites,
+        nombre_barres_longitudinales=n,
+        diametre_longitudinal=diametre_l,
+    )
+
+
 def calculer_coefficients_quadratique(
     NEd: float,
     ks: float,
@@ -517,26 +546,3 @@ def resoudre_as_quadratique(a: float, b: float, c: float) -> float:
         raise SectionInsuffisanteException("Aucune racine positive trouvée.")
 
     return min(racines_positives)
-
-
-def plus_petite_dimension(entree: PoteauInput) -> float:
-    """
-    Retourne la plus petite dimension de la section, au sens EC2 du "h" normatif
-    (utilisée pour les conditions h≥0,15m et d'≤min(0,3h;100mm) de la méthode simplifiée).
-    Valeur essentielle pour le calcul.
-
-    Rectangulaire : min(b, h). Circulaire : diametre (section symétrique).
-
-    Raise DimensionsManquantesException si b/h ou diametre valent None.
-    Raise TypeSectionInvalideException si type_section est inconnu.
-    """
-    if entree.type_section == TYPE_RECTANGULAIRE:
-        if entree.b is None or entree.h is None:
-            raise DimensionsManquantesException()
-        return min(entree.b, entree.h)
-    elif entree.type_section == TYPE_CIRCULAIRE:
-        if entree.diametre is None:
-            raise DimensionsManquantesException()
-        return entree.diametre
-    else:
-        raise TypeSectionInvalideException()

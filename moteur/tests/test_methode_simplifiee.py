@@ -151,4 +151,7 @@ def test_cas_reference_arche_avec_marge_be():
 )
 def test_calculer_atteint_le_taux_de_travail_vise(entree):
     resultat = MethodeSimplifiee().calculer(entree)
-    assert resultat.taux_travail == pytest.approx(TAUX_TRAVAIL_MIN_DEFAUT, rel=1e-9)
+    if resultat.as_min_gouverne:
+        assert resultat.taux_travail >= TAUX_TRAVAIL_MIN_DEFAUT
+    else:
+        assert resultat.taux_travail == pytest.approx(TAUX_TRAVAIL_MIN_DEFAUT, rel=1e-9)
