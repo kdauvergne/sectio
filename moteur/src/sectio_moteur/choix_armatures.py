@@ -1,7 +1,11 @@
 from .modeles import TYPE_CIRCULAIRE, TYPE_RECTANGULAIRE
 from .modeles import PoteauInput
-from .exceptions import DimensionsManquantesException, TypeSectionInvalideException
-from math import pi, floor
+from .exceptions import (
+    DimensionsManquantesException,
+    TypeSectionInvalideException,
+    FerraillageImpossibleException,
+)
+from math import pi, floor, ceil
 
 # Constantes utilisées dans le choix d'armatures
 DIAMETRES_NORMALISES = [
@@ -20,20 +24,81 @@ ESPACEMENT_MIN_BARRES_MM = 30.0  # EC2 art.8.2(2)
 M_VERS_MM = 1000.0  # convertit b/h/diametre (m, PoteauInput) en mm
 
 
-#! TODO
 def choix_armatures(
     as_theorique: float,  # cm2
     as_max: float,  # cm2
     entree: PoteauInput,  # geometrie + type_section + d_prime
 ) -> list[tuple[int, int]]:
-    """Combinaisons (n, Øl) constructibles pour un As théorique donné.
+    """Combinaisons (n, Øl) reellement constructibles pour un As theorique.
 
-    Hypothèse V1 actée : cnom = d' en m, converti en mm ici,
-    car les diamètres de barres sont en mm.
+    Balaie les diamètres normalisés (DIAMETRES_NORMALISES).
+    Pour chacun, calcule le nombre de barres nécessaire (arrondi et
+    ajusté par ajuster_nombre_barres), puis ne retient la combinaison
+    que si elle passe deux filtres indépendants :
+    - la quantité d'acier reste sous as_max (filtre réglementaire),
+    - et le nombre de barres tient physiquement dans le périmètre utile
+    de la section (filtre géométrique, calculer_n_max_geometrique).
+    Hypothese V1 actée : cnom = d'.
+
+    Paramètres:
+        as_theorique: aire d'acier théorique visée, en cm².
+        as_max: aire d'acier maximale réglementaire, en cm² (calculer_as_max).
+        entree: géométrie, type_section et d_prime du poteau.
+
+    Retourne :
+        Liste de couples (n, diametre_mm), un par diamètre normalisé qui
+        passe les deux filtres. Peut contenir plusieurs alternatives.
+
+    Erreurs:
+        FerraillageImpossibleException: si aucun diamètre normalisé ne
+        passe les deux filtres.
     """
-    cnom_mm = entree.d_prime * M_VERS_MM  # M_VERS_MM = 1000.0
 
-    raise NotImplementedError
+    combinaisons = []
+
+    for diametre in DIAMETRES_NORMALISES:
+        aire = calculer_aire_barre(diametre)
+        n = ceil(as_theorique / aire)
+        n = ajuster_nombre_barres(n, entree.type_section)
+        as_reel = n * aire
+        if as_reel > as_max:
+            continue
+        if n > calculer_n_max_geometrique(entree, diametre):
+            continue
+
+        combinaisons.append((n, diametre))
+
+    if not combinaisons:
+        raise FerraillageImpossibleException(as_theorique, as_max)
+
+    return combinaisons
+
+
+def choisir_combinaison_par_defaut(
+    combinaisons: list[tuple[int, int]],
+) -> tuple[int, int]:
+    """Retient la combinaison par défaut parmi celles proposées par choix_armatures.
+
+    Utilisée par calculer(): parmi toutes les combinaisons constructibles,
+    l'As_réel le plus petit est retenu — donc la disposition qui gaspille
+    le moins d'acier au-delà du As théorique visé.
+
+    Paramètres:
+        combinaisons: liste de couples (n, diametre_mm) déjà validés par
+        choix_armatures (filtres réglementaire et géométrique passés).
+
+    Retourne:
+        Le couple (n, diametre_mm) dont l'As_réel (n * calculer_aire_barre)
+        est le plus petit donc la disposition qui gaspille le moins d'acier.
+
+    Note:
+        Pas de départage explicite en cas d'égalité stricte d'As_réel :
+        min() retient alors le premier trouvé dans l'ordre de la liste.
+    """
+    return min(
+        combinaisons,
+        key=lambda c: c[0] * calculer_aire_barre(c[1]),
+    )
 
 
 def calculer_aire_barre(diametre_mm: float) -> float:
@@ -60,12 +125,20 @@ def ajuster_nombre_barres(n: int, type_section: str) -> int:
 
     Retourne:
         int: Nombre de barres ajusté selon les règles de disposition.
+
+    Erreur:
+        Lève TypSectionInvalideException si le type de section n'est pas rectangulaire ou circulaire.
     """
+
     if type_section == TYPE_RECTANGULAIRE:
-        if n % 2 != 0:
+        if n < 4:
+            n = 4
+        elif n % 2 != 0:
             n += 1
     elif type_section == TYPE_CIRCULAIRE:
         n = max(n, 6)
+    else:
+        raise TypeSectionInvalideException
     return n
 
 
@@ -73,12 +146,21 @@ def calculer_n_max_geometrique(entree: PoteauInput, diametre_mm: float) -> int:
     """
     Calcule le nombre maximal de barres pouvant être disposées dans la section.
 
+    Le périmètre utile (intérieur, après enrobage d') est divisé par
+    l'entraxe minimal entre deux barres — la distance axe à axe, égale
+    au diamètre d'une barre plus l'espacement libre minimal entre elles
+    (ESPACEMENT_MIN_BARRES_MM, art. 8.2(2)).
+
     Paramètres:
         entree: Données géométriques de la section.
         diametre_mm (float): Diamètre des armatures longitudinales en mm.
 
     Retourne:
-        int: Nombre maximal de barres admissible géométriquement.
+        Nombre maximal de barres admissible géométriquement arrondi à l'entier inférieur.
+
+    Erreurs:
+        DimensionsManquantesException: si b/h ou diametre valent None.
+        TypeSectionInvalideException: si type_section est inconnu.
     """
     if entree.type_section == TYPE_RECTANGULAIRE:
         if entree.b is None or entree.h is None:
@@ -96,5 +178,6 @@ def calculer_n_max_geometrique(entree: PoteauInput, diametre_mm: float) -> int:
     else:
         raise TypeSectionInvalideException()
 
-    n_max = floor(perimetre_utile / max(diametre_mm, ESPACEMENT_MIN_BARRES_MM))
+    entraxe = diametre_mm + max(diametre_mm, ESPACEMENT_MIN_BARRES_MM)
+    n_max = floor(perimetre_utile / entraxe)
     return n_max
