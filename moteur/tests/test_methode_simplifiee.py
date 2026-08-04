@@ -1,7 +1,12 @@
 from dataclasses import replace
 import pytest
-from sectio_moteur.methode_simplifiee import calculer_lambda, TAUX_TRAVAIL_MIN
-from sectio_moteur.modeles import PoteauInput, TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
+from sectio_moteur.methode_simplifiee import calculer_lambda
+from sectio_moteur.modeles import (
+    PoteauInput,
+    TYPE_RECTANGULAIRE,
+    TYPE_CIRCULAIRE,
+    TAUX_TRAVAIL_MIN_DEFAUT,
+)
 from sectio_moteur.exceptions import (
     TypeSectionInvalideException,
     DimensionsManquantesException,
@@ -89,14 +94,27 @@ def test_est_applicable_fck_hors_plage():
     assert any("fck" in v for v in violations)
 
 
-def test_cas_reference_arche():
-    """Test officiel Arche 03-0188SSLLG_EC2 issu du PDF Arche Validation Guide 2018 FR page 119.
+def test_cas_reference_arche_sans_marge():
+    """Test officiel Arche 03-0188SSLLG_EC2 (Arche Validation Guide 2018 FR, page 119).
+
     Poteau carre 0,30x0,30, lambda=32,66. G=1209 kN, Q=200 kN (120,90T et 20,00T, 1T=10kN).
-    Reference Arche (SANS marge BE, NRd=NEd) : As=34cm2 (v2018 Arche: 33,51).
-    Notre calculer() applique TAUX_TRAVAIL_MIN=1,1 (marge BE confirmee Pierre) :
-    valeurs ci-dessous recalculees avec cette marge -- pas comparables au 34cm2 du guide.
+    Reference Arche : As=34cm2 (valeur calculee par Arche v2018 : 33,51).
+    Valide les formules EC2 nues, sans marge : taux_travail_min=1,0 par defaut, donc NRd=NEd.
     """
     entree = _entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0)
+    r = MethodeSimplifiee().calculer(entree)
+
+    assert abs(r.As - 33.94) / 33.94 < 0.03
+    assert r.NRd == pytest.approx(r.NEd, rel=1e-9)
+
+
+def test_cas_reference_arche_avec_marge_be():
+    """Meme poteau que le test precedent, avec la marge BE de 10% (confirmee Pierre).
+
+    taux_travail_min=1,1 : on vise NRd = 1,1 x NEd, d'ou un As plus eleve.
+    Valeurs recalculees avec cette marge -- non comparables au 34cm2 du guide Arche.
+    """
+    entree = _entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0, taux_travail_min=1.1)
     r = MethodeSimplifiee().calculer(entree)
 
     assert abs(r.As - 42.02) / 42.02 < 0.03
@@ -133,4 +151,4 @@ def test_cas_reference_arche():
 )
 def test_calculer_atteint_le_taux_de_travail_vise(entree):
     resultat = MethodeSimplifiee().calculer(entree)
-    assert resultat.taux_travail == pytest.approx(TAUX_TRAVAIL_MIN, rel=1e-9)
+    assert resultat.taux_travail == pytest.approx(TAUX_TRAVAIL_MIN_DEFAUT, rel=1e-9)
