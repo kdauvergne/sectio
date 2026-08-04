@@ -5,6 +5,7 @@ from .exceptions import (
     TypeSectionInvalideException,
     FerraillageImpossibleException,
 )
+from .methode_simplifiee import plus_petite_dimension
 from math import pi, floor, ceil
 
 # Constantes utilisées dans le choix d'armatures
@@ -22,6 +23,13 @@ DIAMETRES_NORMALISES = [
 
 ESPACEMENT_MIN_BARRES_MM = 30.0  # EC2 art.8.2(2)
 M_VERS_MM = 1000.0  # convertit b/h/diametre (m, PoteauInput) en mm
+
+# Constantes normées par l'EC2 pour les cadres
+DIAMETRE_CADRE_MIN_MM = 6.0
+ESPACEMENT_CADRES_MAX_MM = 400.0
+FACTEUR_ESPACEMENT_DIAMETRE = 20
+FACTEUR_ESPACEMENT_EXTREMITES = 0.6
+FACTEUR_DIAMETRE_CADRE = 4
 
 
 def choix_armatures(
@@ -181,3 +189,34 @@ def calculer_n_max_geometrique(entree: PoteauInput, diametre_mm: float) -> int:
     entraxe = diametre_mm + max(diametre_mm, ESPACEMENT_MIN_BARRES_MM)
     n_max = floor(perimetre_utile / entraxe)
     return n_max
+
+
+def calculer_armatures_transversales(
+    diametre_long_mm: float, entree: PoteauInput
+) -> tuple[float, float, float]:
+    """Calcule les cadres (armatures transversales) qui ceinturent
+    les barres longitudinales — leur diamètre, et l'espacement entre eux.
+    Art. 9.5.3.(Øt, e_central, e_extremites), les 3 en mm.
+
+    Paramètres :
+        diametre_long_mm : diamètre des barres longitudinales, en mm.
+        entree : géométrie du poteau (pour plus_petite_dimension, en mètres,
+        convertie en mm via M_VERS_MM avant comparaison)
+
+    Retourne:
+        (diametre_cadre, e_central, e_extremites), les 3 en mm :
+            diametre_cadre = max(6 ; Øl/4)
+            e_central       = min(20·Øl ; plus petite dimension ; 400)
+            e_extremites     = 0,6 · e_central
+    """
+    diametre_cadre = max(
+        DIAMETRE_CADRE_MIN_MM, diametre_long_mm / FACTEUR_DIAMETRE_CADRE
+    )
+    e_central = min(
+        FACTEUR_ESPACEMENT_DIAMETRE * diametre_long_mm,
+        plus_petite_dimension(entree) * M_VERS_MM,
+        ESPACEMENT_CADRES_MAX_MM,
+    )
+    e_extremites = FACTEUR_ESPACEMENT_EXTREMITES * e_central
+
+    return diametre_cadre, e_central, e_extremites
