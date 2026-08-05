@@ -85,3 +85,15 @@ class ResultatPoteau:
     # armatures longitudinales - sortie du choix du module choix_armatures indépendant
     nombre_barres_longitudinales: int | None = None
     diametre_longitudinal: float | None = None
+
+
+@dataclass(frozen=True)
+class TypeFerraillage:
+    """Un type de ferraillage proposé pour un groupe de poteaux physiques.
+
+    resultat : le ResultatPoteau retenu pour ce type (calculer() ou verifier()).
+    poteaux_couverts : les poteaux physiques auxquels ce ferraillage s'applique.
+    """
+
+    resultat: ResultatPoteau
+    poteaux_couverts: list[PoteauInput]
