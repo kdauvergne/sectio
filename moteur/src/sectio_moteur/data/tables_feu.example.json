@@ -1,0 +1,247 @@
+{
+  "_commentaire": "Structure du Tableau 5.2a (EC2-1-2 §5.3.2, methode A). VALEURS FICTIVES: les vraies valeurs sont sous copyright AFNOR. Dupliquez ce fichier en tables_feu.json et remplacez les valeurs par celles de votre exemplaire de la norme.",
+  "_format": "duree > exposition > colonne mu_fi > liste de couples. Un couple = {bmin en mm, a en mm, min_8_barres}. Liste vide = combinaison impossible (case '—' du tableau). Conforme si AU MOINS UN couple est satisfait en entier.",
+  "R30": {
+    "plus_d_un_cote": {
+      "0.2": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ],
+      "0.5": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ],
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": false
+        }
+      ]
+    },
+    "un_seul_cote": {
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ]
+    }
+  },
+  "R60": {
+    "plus_d_un_cote": {
+      "0.2": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ],
+      "0.5": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": false
+        }
+      ],
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": false
+        }
+      ]
+    },
+    "un_seul_cote": {
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ]
+    }
+  },
+  "R90": {
+    "plus_d_un_cote": {
+      "0.2": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": false
+        }
+      ],
+      "0.5": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": false
+        }
+      ],
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": true
+        }
+      ]
+    },
+    "un_seul_cote": {
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ]
+    }
+  },
+  "R120": {
+    "plus_d_un_cote": {
+      "0.2": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": false
+        }
+      ],
+      "0.5": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": true
+        }
+      ],
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        },
+        {
+          "bmin": 998,
+          "a": 98,
+          "min_8_barres": true
+        }
+      ]
+    },
+    "un_seul_cote": {
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ]
+    }
+  },
+  "R180": {
+    "plus_d_un_cote": {
+      "0.2": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        }
+      ],
+      "0.5": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        }
+      ],
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        }
+      ]
+    },
+    "un_seul_cote": {
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ]
+    }
+  },
+  "R240": {
+    "plus_d_un_cote": {
+      "0.2": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        }
+      ],
+      "0.5": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": true
+        }
+      ],
+      "0.7": []
+    },
+    "un_seul_cote": {
+      "0.7": [
+        {
+          "bmin": 999,
+          "a": 99,
+          "min_8_barres": false
+        }
+      ]
+    }
+  }
+}
