@@ -81,6 +81,7 @@ class ResultatPoteau:
     diametre_cadres: float | None = None
     espacement_central: float | None = None
     espacement_extremites: float | None = None
+    combinaisons_possibles: list[tuple[int, int]] | None = None
 
     # armatures longitudinales - sortie du choix du module choix_armatures indépendant
     nombre_barres_longitudinales: int | None = None

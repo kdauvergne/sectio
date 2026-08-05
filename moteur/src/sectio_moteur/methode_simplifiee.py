@@ -478,6 +478,7 @@ def assembler_resultat(
         espacement_extremites=e_extremites,
         nombre_barres_longitudinales=n,
         diametre_longitudinal=diametre_l,
+        combinaisons_possibles=combinaisons,
     )
 
 
