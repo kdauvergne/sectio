@@ -2,8 +2,7 @@ import json
 from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
-from abc import ABC
-from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
+from abc import ABC, abstractmethod
 
 # CHEMIN_DONNEES_REELLES = Path(__file__).parent / "data" / "tables_feu.json"
 
@@ -23,15 +22,14 @@ class EntreeFeu:
     Qk1: float  # charge d'exploitation caractéristique principale (kN)
     duree_resistance_feu: str  # code durée visée : "R30", "R60", "R90"...
     l0: float  # longueur efficace à température normale (m)
-    l0_fi: float  # longueur efficace au feu (m)
-    e1: float  # excentricité au feu (m)
     b: float  # largeur (m)
     h: float  # plus petite dimension normative (m) — cf. plus_petite_dimension()
-    a: float  # distance axe armatures longi. / parement exposé (mm)
     as_: float  # section d'acier (cm²)
-    ac: float  # aire de la section (unité à trancher, cf. point bloquant)
+    ac: float  # aire de la section (m²)
     expose_un_seul_cote: bool
-    type_section: str
+    l0_fi: float | None  # longueur efficace au feu (m)
+    a: float | None  # distance axe armatures longi. / parement exposé (mm)
+    e1: float = 0.0  # excentricité au feu (m)
 
 
 @dataclass(frozen=True)
@@ -44,6 +42,21 @@ class ResultatFeu:
     couple_valide: (
         tuple[float, float] | None
     )  # couple (bmin, a) retenu si conforme, sinon None
+
+
+class VerificationFeuInterface(ABC):
+    """Contrat pour toute méthode de vérification de la résistance au feu.
+
+    Toute implémentation (ex. VerificationFeuValeursTabulees pour la méthode A,
+    une future implémentation méthode B) doit fournir verifier_resistance_feu(),
+    ce qui permet au reste du code (backend, tests) d'appeler cette méthode sans
+    connaître l'implémentation utilisée derrière.
+    """
+
+    @abstractmethod
+    def verifier_resistance_feu(self, entree: EntreeFeu) -> ResultatFeu:
+        """Vérifie si un poteau résiste au feu pendant la durée demandée."""
+        pass
 
 
 class DureeResistanceFeuInvalideException(Exception):
@@ -71,8 +84,8 @@ def convertir_duree(valeur: str) -> DureeResistanceFeu:
         DureeResistanceFeuInvalideException: si valeur ne correspond à aucun membre.
     """
     try:
-        return DureeResistanceFeu(valeur)
-    except ValueError:
+        return DureeResistanceFeu[valeur]
+    except KeyError:
         raise DureeResistanceFeuInvalideException(valeur)
 
 
