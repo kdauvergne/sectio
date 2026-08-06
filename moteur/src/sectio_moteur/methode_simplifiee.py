@@ -3,6 +3,7 @@ from .exceptions import (
     DimensionsManquantesException,
     SectionInsuffisanteException,
     MethodeNonApplicableException,
+    FerraillageImpossibleException,
 )
 from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from .modeles import PoteauInput, ResultatPoteau
@@ -14,6 +15,7 @@ from .choix_armatures import (
     calculer_armatures_transversales,
 )
 from math import sqrt, floor
+from dataclasses import replace
 
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
@@ -90,7 +92,8 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             2. résolution de As (branche linéaire ou quadratique selon la
                 plus petite dimension de la section)
             3. bornage réglementaire As,min / As,max
-            4. assemblage du résultat (armatures comprises)
+            4. assemblage du résultat de dimensionnement
+            5. matérialisation en barres et cadres (ajouter_ferraillage)
 
         Contrairement à verifier(), calculer() applique elle-même le bornage :
         As trop faible est remonté à As,min (as_min_gouverne=True), As trop
@@ -102,12 +105,13 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         Retourne :
             ResultatPoteau complet : As retenu, NRd, taux de travail,
             grandeurs intermédiaires et armatures (barres + cadres).
+            Si aucune disposition de barres n'est constructible, le
+            dimensionnement est tout de même retourné, armatures à None et
+            ferraillage_impossible=True.
 
         Erreurs :
             MethodeNonApplicableException: poteau hors domaine d'application.
             SectionInsuffisanteException: As requis dépasse As,max.
-            FerraillageImpossibleException: aucune disposition de barres réelles
-            ne convient pour le As retenu.
         """
 
         # rejet explicite si le poteau sort du domaine de la méthode simplifiée
@@ -148,7 +152,9 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         # corrige As si hors bornes ; lève SectionInsuffisanteException si trop grand
         As, as_min_gouverne = borner_as(As, as_min, as_max)
 
-        return assembler_resultat(As, as_min_gouverne, as_max, entree, grandeurs)
+        resultat = assembler_resultat(As, as_min_gouverne, as_max, entree, grandeurs)
+
+        return ajouter_ferraillage(resultat, entree, as_max)
 
     def verifier(self, as_propose: float, entree: PoteauInput) -> ResultatPoteau:
         """
@@ -164,6 +170,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             2. calcul des bornes réglementaires As,min / As,max
             3. rejet si as_propose dépasse As,max (aucune substitution)
             4. assemblage du résultat sur as_propose tel quel
+            5. matérialisation en barres et cadres (ajouter_ferraillage)
 
         Paramètres :
             as_propose: section d'acier à vérifier, en cm² (ex. valeur arrondie
@@ -179,11 +186,12 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
             que as_propose est au niveau ou en dessous du minimum réglementaire
             (une alerte), pas qu'une substitution a eu lieu.
 
+            Comme dans calculer(), une matérialisation impossible n'annule pas
+            la vérification : ferraillage_impossible=True, armatures à None.
+
         Erreurs :
             MethodeNonApplicableException: poteau hors domaine d'application.
             SectionInsuffisanteException: as_propose dépasse As,max.
-            FerraillageImpossibleException: aucune disposition de barres réelles
-            ne convient pour as_propose.
         """
 
         # rejet explicite si le poteau sort du domaine de la méthode simplifiée
@@ -205,9 +213,11 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         # drapeau d'alerte : le ferraillage proposé est au niveau ou sous le minimum
         as_min_gouverne = as_propose <= as_min
 
-        return assembler_resultat(
+        resultat = assembler_resultat(
             as_propose, as_min_gouverne, as_max, entree, grandeurs
         )
+
+        return ajouter_ferraillage(resultat, entree, as_max)
 
 
 """
@@ -455,12 +465,6 @@ def assembler_resultat(
     NRd = kh * ks * alpha * (Ac * fcd * M2_MPA_VERS_KN + As * fyd * CM2_MPA_VERS_KN)
     taux_travail = NRd / NEd
 
-    combinaisons = choix_armatures(As, as_max, entree)
-    n, diametre_l = choisir_combinaison_par_defaut(combinaisons)
-
-    diametre_cadre, e_central, e_extremites = calculer_armatures_transversales(
-        diametre_l, entree
-    )
     return ResultatPoteau(
         As=As,
         NRd=NRd,
@@ -473,12 +477,52 @@ def assembler_resultat(
         ks=ks,
         rho=rho,
         delta=delta,
+    )
+
+
+def ajouter_ferraillage(
+    resultat: ResultatPoteau, entree: PoteauInput, as_max: float
+) -> ResultatPoteau:
+    """Matérialise un dimensionnement en armatures réelles (barres + cadres).
+
+    Deuxième temps du calcul : assembler_resultat() répond « combien de cm²
+    d'acier », ajouter_ferraillage() répond « comment les disposer ».
+
+    Un As pourtant conforme (≤ As,max) peut n'admettre aucune disposition
+    constructible — arrondi au nombre entier de barres dépassant As,max, ou
+    barres ne rentrant pas dans le périmètre utile. Ce cas ne détruit pas le
+    dimensionnement : il est signalé, jamais corrigé.
+
+    Paramètres :
+        resultat: ResultatPoteau issu d'assembler_resultat(), armatures à None.
+        entree: géométrie et type_section du poteau.
+        as_max: borne réglementaire, en cm² (calculer_as_max).
+
+    Retourne :
+        Une copie du résultat (frozen → dataclasses.replace), armatures
+        renseignées ; ou le résultat inchangé avec ferraillage_impossible=True.
+
+    Erreurs :
+        Aucune : FerraillageImpossibleException est capturée ici et convertie
+        en drapeau — seul endroit du moteur où elle est absorbée.
+    """
+    try:
+        combinaisons = choix_armatures(resultat.As, as_max, entree)
+    except FerraillageImpossibleException:
+        return replace(resultat, ferraillage_impossible=True)
+
+    n, diametre_l = choisir_combinaison_par_defaut(combinaisons)
+    diametre_cadre, e_central, e_extremites = calculer_armatures_transversales(
+        diametre_l, entree
+    )
+    return replace(
+        resultat,
+        combinaisons_possibles=combinaisons,
+        nombre_barres_longitudinales=n,
+        diametre_longitudinal=diametre_l,
         diametre_cadres=diametre_cadre,
         espacement_central=e_central,
         espacement_extremites=e_extremites,
-        nombre_barres_longitudinales=n,
-        diametre_longitudinal=diametre_l,
-        combinaisons_possibles=combinaisons,
     )
 
 

@@ -86,6 +86,7 @@ class ResultatPoteau:
     # armatures longitudinales - sortie du choix du module choix_armatures indépendant
     nombre_barres_longitudinales: int | None = None
     diametre_longitudinal: float | None = None
+    ferraillage_impossible: bool = False
 
 
 @dataclass(frozen=True)
