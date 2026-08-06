@@ -10,6 +10,7 @@ from sectio_moteur.modeles import (
 from sectio_moteur.exceptions import (
     TypeSectionInvalideException,
     DimensionsManquantesException,
+    SectionInsuffisanteException,
 )
 
 from sectio_moteur.methode_simplifiee import MethodeSimplifiee
@@ -108,18 +109,11 @@ def test_cas_reference_arche_sans_marge():
     assert r.NRd == pytest.approx(r.NEd, rel=1e-9)
 
 
-def test_cas_reference_arche_avec_marge_be():
-    """Meme poteau que le test precedent, avec la marge BE de 10% (confirmee Pierre).
-
-    taux_travail_min=1,1 : on vise NRd = 1,1 x NEd, d'ou un As plus eleve.
-    Valeurs recalculees avec cette marge -- non comparables au 34cm2 du guide Arche.
-    """
+def test_marge_be_rejete_le_poteau_de_reference():
+    """30×30 + marge 10 % → As = 42,0 cm² = 4,67 % Ac > As,max (4 %)."""
     entree = _entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0, taux_travail_min=1.1)
-    r = MethodeSimplifiee().calculer(entree)
-
-    assert abs(r.As - 42.02) / 42.02 < 0.03
-    assert abs(r.NRd - 2125.37) / 2125.37 < 0.03
-    assert abs(r.kh - 0.8706) < 0.01
+    with pytest.raises(SectionInsuffisanteException):
+        MethodeSimplifiee().calculer(entree)
 
 
 @pytest.mark.parametrize(
@@ -155,3 +149,29 @@ def test_calculer_atteint_le_taux_de_travail_vise(entree):
         assert resultat.taux_travail >= TAUX_TRAVAIL_MIN_DEFAUT
     else:
         assert resultat.taux_travail == pytest.approx(TAUX_TRAVAIL_MIN_DEFAUT, rel=1e-9)
+
+
+@pytest.mark.parametrize(
+    "entree, as_attendu",
+    [
+        (
+            # CAS C - POTEAU CARRÉ 0,44x0,44m
+            _entree(
+                type_section=TYPE_RECTANGULAIRE,
+                L0=3.10,
+                b=0.44,
+                h=0.44,
+                d_prime=0.036,
+                fck=45,
+                fyk=500,
+                G=2014.7,
+                Q=1000.0,
+            ),
+            9.71,
+        )
+    ],
+)
+def test_NDC_Arche_Poteau(entree, as_attendu):
+    r = MethodeSimplifiee().calculer(entree)
+
+    assert r.As == pytest.approx(as_attendu, rel=1e-3)
