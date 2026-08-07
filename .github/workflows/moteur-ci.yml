@@ -1,0 +1,47 @@
+name: Moteur CI
+
+on:
+  push:
+    paths:
+      - "moteur/**"
+      - ".github/workflows/moteur-ci.yml"
+  pull_request:
+    paths:
+      - "moteur/**"
+      - ".github/workflows/moteur-ci.yml"
+
+jobs:
+  qualite-et-tests:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: moteur
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Installer Poetry
+        run: pipx install poetry
+
+      - name: Installer les dépendances
+        run: poetry install --with dev
+
+      - name: Lint (Ruff)
+        run: poetry run ruff check .
+
+      - name: Format (Ruff)
+        run: poetry run ruff format --check .
+
+      - name: Tests (pytest)
+        run: poetry run pytest
