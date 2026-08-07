@@ -1,16 +1,24 @@
-class TypeSectionInvalideException(Exception):
+class SectioException(Exception):
+    """Base commune à toutes les exceptions métier du moteur.
+
+    Permet aux appelants (classement, API) d'attraper « une erreur de
+    dimensionnement » sans attraper aussi les bugs Python (TypeError,
+    AttributeError…), qui doivent, eux, remonter.
+    """
+
+class TypeSectionInvalideException(SectioException):
     pass
 
 
-class DimensionsManquantesException(Exception):
+class DimensionsManquantesException(SectioException):
     pass
 
 
-class ClasseExpositionInvalideException(Exception):
+class ClasseExpositionInvalideException(SectioException):
     pass
 
 
-class SectionInsuffisanteException(Exception):
+class SectionInsuffisanteException(SectioException):
     """Levée quand la section béton ne peut pas reprendre l'effort demandé.
 
     as_calcule et as_max sont optionnels : certains appels (ex. discriminant
@@ -30,7 +38,7 @@ class SectionInsuffisanteException(Exception):
         super().__init__(message)
 
 
-class MethodeNonApplicableException(Exception):
+class MethodeNonApplicableException(SectioException):
     """Levée quand un poteau ne respecte pas le domaine d'application de la méthode simplifiée.
 
     conditions_violees : liste des règles non respectées (ex. "fck hors bornes"),
@@ -44,7 +52,7 @@ class MethodeNonApplicableException(Exception):
         super().__init__(message)
 
 
-class FerraillageImpossibleException(Exception):
+class FerraillageImpossibleException(SectioException):
     """Levée quand aucune combinaison (n, Øl) de barres réelles ne convient.
 
     As théorique valide, mais le balayage des diamètres normalisés (choix_armatures)

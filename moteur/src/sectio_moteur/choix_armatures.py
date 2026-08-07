@@ -1,12 +1,12 @@
-from .modeles import TYPE_CIRCULAIRE, TYPE_RECTANGULAIRE
-from .modeles import PoteauInput
+from math import ceil, floor, pi
+
 from .exceptions import (
     DimensionsManquantesException,
-    TypeSectionInvalideException,
     FerraillageImpossibleException,
+    TypeSectionInvalideException,
 )
 from .geometrie import plus_petite_dimension
-from math import pi, floor, ceil
+from .modeles import TYPE_CIRCULAIRE, TYPE_RECTANGULAIRE, PoteauInput
 
 # Constantes utilisées dans le choix d'armatures
 DIAMETRES_NORMALISES = [

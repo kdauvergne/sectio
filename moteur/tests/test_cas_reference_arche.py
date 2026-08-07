@@ -1,6 +1,7 @@
 import pytest
+
 from sectio_moteur.methode_simplifiee import MethodeSimplifiee
-from sectio_moteur.modeles import PoteauInput, TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
+from sectio_moteur.modeles import TYPE_CIRCULAIRE, TYPE_RECTANGULAIRE, PoteauInput
 
 """Tests de bout en bout du moteur de calcul avec des cas référence Arche."""
 

@@ -1,21 +1,22 @@
-from .exceptions import (
-    TypeSectionInvalideException,
-    DimensionsManquantesException,
-    SectionInsuffisanteException,
-    MethodeNonApplicableException,
-    FerraillageImpossibleException,
-)
-from .modeles import TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
-from .modeles import PoteauInput, ResultatPoteau
-from .interfaces import MethodeCalculPoteauInterface
-from .geometrie import plus_petite_dimension, calculer_aire_beton
-from .choix_armatures import (
-    choix_armatures,
-    choisir_combinaison_par_defaut,
-    calculer_armatures_transversales,
-)
-from math import sqrt, floor
 from dataclasses import replace
+from math import sqrt
+from typing import NamedTuple
+
+from .choix_armatures import (
+    calculer_armatures_transversales,
+    choisir_combinaison_par_defaut,
+    choix_armatures,
+)
+from .exceptions import (
+    DimensionsManquantesException,
+    FerraillageImpossibleException,
+    MethodeNonApplicableException,
+    SectionInsuffisanteException,
+    TypeSectionInvalideException,
+)
+from .geometrie import calculer_aire_beton, plus_petite_dimension
+from .interfaces import MethodeCalculPoteauInterface
+from .modeles import TYPE_CIRCULAIRE, TYPE_RECTANGULAIRE, PoteauInput, ResultatPoteau
 
 M2_MPA_VERS_KN = 1000.0  # convertit surface (m²) · résistance (MPa) en kN — utilisée pour le terme béton (Ac*fcd).
 CM2_MPA_VERS_KN = 0.1  # convertit As (cm²) et résistance (MPa) en kN — utilisée pour le terme acier (As*fyd), unité différente puisque As est en cm² et non en m².
@@ -43,8 +44,25 @@ KN_PAR_MPA_VERS_CM2 = 10.0  # (kN / MPa) -> cm2
 M2_VERS_CM2 = 1e4  # m2 -> cm2
 
 
-class MethodeSimplifiee(MethodeCalculPoteauInterface):
+class GrandeursCommunes(NamedTuple):
+    """Grandeurs intermédiaires partagées par calculer() et verifier().
 
+    Reste un tuple (décompactage possible), mais accessible par nom :
+    supprime le risque d'inversion silencieuse entre deux float.
+    """
+
+    NEd: float  # kN
+    Ac: float  # m²
+    fcd: float  # MPa
+    fyd: float  # MPa
+    lambda_: float  # sans dimension
+    alpha: float  # sans dimension
+    ks: float  # sans dimension
+    h_ou_d: float  # m — plus petite dimension de la section
+    delta: float  # sans dimension
+
+
+class MethodeSimplifiee(MethodeCalculPoteauInterface):
     HYPOTHESES_NON_VERIFIEES = (
         "compression centrée",
         "armatures symétriques (rect: 1/2 par face ; circ: 6 barres réparties)",
@@ -119,36 +137,37 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         if violations:
             raise MethodeNonApplicableException(violations)
 
-        grandeurs = grandeurs_communes(
-            entree
-        )  # on garde le tuple complet, car assembler_resultat l'attend en paramètre
-        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = (
-            grandeurs  # décompacte aussi en 9 variables, utilisées plus bas pour résoudre As
-        )
+        grandeurs = grandeurs_communes(entree)
 
-        if (entree.type_section == TYPE_RECTANGULAIRE and h_ou_d < 0.5) or (
-            entree.type_section == TYPE_CIRCULAIRE and h_ou_d < 0.60
+        if (entree.type_section == TYPE_RECTANGULAIRE and grandeurs.h_ou_d < 0.5) or (
+            entree.type_section == TYPE_CIRCULAIRE and grandeurs.h_ou_d < 0.60
         ):
             a, b, c = calculer_coefficients_quadratique(
-                NEd,
-                ks,
-                alpha,
-                Ac,
-                fcd,
-                fyd,
-                h_ou_d,
-                delta,
+                grandeurs.NEd,
+                grandeurs.ks,
+                grandeurs.alpha,
+                grandeurs.Ac,
+                grandeurs.fcd,
+                grandeurs.fyd,
+                grandeurs.h_ou_d,
+                grandeurs.delta,
                 entree.type_section,
                 entree.taux_travail_min,
             )
             As = resoudre_as_quadratique(a, b, c)
         else:
             As = resoudre_as_lineaire(
-                NEd, ks, alpha, Ac, fcd, fyd, entree.taux_travail_min
+                grandeurs.NEd,
+                grandeurs.ks,
+                grandeurs.alpha,
+                grandeurs.Ac,
+                grandeurs.fcd,
+                grandeurs.fyd,
+                entree.taux_travail_min,
             )
         # bornes réglementaires, calculées à partir de l'effort et de la section
-        as_min = calculer_as_min(NEd, fyd, Ac)
-        as_max = calculer_as_max(Ac)
+        as_min = calculer_as_min(grandeurs.NEd, grandeurs.fyd, grandeurs.Ac)
+        as_max = calculer_as_max(grandeurs.Ac)
         # corrige As si hors bornes ; lève SectionInsuffisanteException si trop grand
         As, as_min_gouverne = borner_as(As, as_min, as_max)
 
@@ -201,11 +220,11 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
         # grandeurs communes avec calculer()
         grandeurs = grandeurs_communes(entree)
-        NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta = grandeurs
 
         # mêmes bornes que calculer(), mais AUCUNE substitution ici
-        as_min = calculer_as_min(NEd, fyd, Ac)
-        as_max = calculer_as_max(Ac)
+        as_min = calculer_as_min(grandeurs.NEd, grandeurs.fyd, grandeurs.Ac)
+        as_max = calculer_as_max(grandeurs.Ac)
+
         if as_propose > as_max:
             raise SectionInsuffisanteException(
                 "As proposé dépasse As,max", as_calcule=as_propose, as_max=as_max
@@ -228,7 +247,7 @@ Sans eux, impossible d'écrire l'équation en As.
 """
 
 
-def grandeurs_communes(entree: PoteauInput) -> tuple:
+def grandeurs_communes(entree: PoteauInput) -> GrandeursCommunes:
     NEd = COEF_G * entree.G + COEF_Q * entree.Q
     Ac = calculer_aire_beton(entree)
     fcd = entree.fck / GAMMA_C
@@ -238,7 +257,7 @@ def grandeurs_communes(entree: PoteauInput) -> tuple:
     ks = calculer_ks(entree.fyk, lambda_, entree.type_section)
     h_ou_d = plus_petite_dimension(entree)
     delta = entree.d_prime / h_ou_d
-    return NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta
+    return GrandeursCommunes(NEd, Ac, fcd, fyd, lambda_, alpha, ks, h_ou_d, delta)
 
 
 def calculer_lambda(entree: PoteauInput) -> float:
@@ -452,7 +471,7 @@ def assembler_resultat(
     as_min_gouverne: bool,
     as_max: float,
     entree: PoteauInput,
-    grandeurs: tuple,
+    grandeurs: GrandeursCommunes,
 ) -> ResultatPoteau:
     """Construit le ResultatPoteau à partir d'un As définitif.
 

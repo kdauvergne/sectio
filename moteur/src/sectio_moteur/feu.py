@@ -1,8 +1,6 @@
-import json
-from enum import Enum
-from dataclasses import dataclass
-from pathlib import Path
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from enum import Enum
 
 # CHEMIN_DONNEES_REELLES = Path(__file__).parent / "data" / "tables_feu.json"
 
@@ -56,7 +54,6 @@ class VerificationFeuInterface(ABC):
     @abstractmethod
     def verifier_resistance_feu(self, entree: EntreeFeu) -> ResultatFeu:
         """Vérifie si un poteau résiste au feu pendant la durée demandée."""
-        pass
 
 
 class DureeResistanceFeuInvalideException(Exception):

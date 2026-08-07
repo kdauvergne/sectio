@@ -1,7 +1,8 @@
-import pytest
 from dataclasses import FrozenInstanceError
-from sectio_moteur.modeles import PoteauInput, ResultatPoteau
 
+import pytest
+
+from sectio_moteur.modeles import PoteauInput, ResultatPoteau
 
 
 def test_poteau_input_est_immuable():

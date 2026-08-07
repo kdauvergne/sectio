@@ -1,3 +1,4 @@
+from ..exceptions import SectioException
 from ..interfaces import MethodeCalculPoteauInterface
 from ..modeles import PoteauInput, ResultatPoteau, TypeFerraillage
 
@@ -19,7 +20,7 @@ def calculer_tous_les_poteaux(
         try:
             resultat = methode.calculer(poteau)
             succes.append((poteau, resultat))
-        except Exception as e:
+        except SectioException as e:
             echecs.append((poteau, e))
     return succes, echecs
 

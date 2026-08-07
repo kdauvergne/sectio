@@ -1,7 +1,7 @@
 from math import pi
 
-from .modeles import PoteauInput, TYPE_RECTANGULAIRE, TYPE_CIRCULAIRE
 from .exceptions import DimensionsManquantesException, TypeSectionInvalideException
+from .modeles import TYPE_CIRCULAIRE, TYPE_RECTANGULAIRE, PoteauInput
 
 
 def plus_petite_dimension(entree: PoteauInput) -> float:

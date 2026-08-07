@@ -1,18 +1,18 @@
 from dataclasses import replace
-import pytest
-from sectio_moteur.methode_simplifiee import calculer_lambda
-from sectio_moteur.methode_simplifiee import MethodeSimplifiee
 
-from sectio_moteur.modeles import (
-    PoteauInput,
-    TYPE_RECTANGULAIRE,
-    TYPE_CIRCULAIRE,
-    TAUX_TRAVAIL_MIN_DEFAUT,
-)
+import pytest
+
 from sectio_moteur.exceptions import (
-    TypeSectionInvalideException,
     DimensionsManquantesException,
     SectionInsuffisanteException,
+    TypeSectionInvalideException,
+)
+from sectio_moteur.methode_simplifiee import MethodeSimplifiee, calculer_lambda
+from sectio_moteur.modeles import (
+    TAUX_TRAVAIL_MIN_DEFAUT,
+    TYPE_CIRCULAIRE,
+    TYPE_RECTANGULAIRE,
+    PoteauInput,
 )
 
 

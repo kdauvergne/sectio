@@ -1,6 +1,8 @@
-from sectio_moteur.enrobage import calculer_cnom
 from pathlib import Path
+
 import pytest
+
+from sectio_moteur.enrobage import calculer_cnom
 from sectio_moteur.exceptions import ClasseExpositionInvalideException
 
 CHEMIN_DONNEES_TEST = (
