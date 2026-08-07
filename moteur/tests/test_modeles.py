@@ -21,7 +21,7 @@ def test_poteau_input_est_immuable():
     assert poteau.diametre == 500
     assert poteau.b is None
     assert poteau.h is None
-    
+
 def test_creation_resultat_poteau():
 
     resultat = ResultatPoteau(
@@ -60,7 +60,7 @@ def test_resultat_poteau_est_immuable():
 
     with pytest.raises(FrozenInstanceError):
         resultat.NRd = 2000 # type: ignore
-        
+
 def test_resultat_poteau_cree_sans_armatures_transversales():
 
     resultat = ResultatPoteau(

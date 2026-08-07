@@ -22,3 +22,21 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "--ignore=tests/test_enrobage.py"
+
+[tool.ruff]
+
+line-length = 88
+target-version = "py312"  # borne basse de requires-python
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "BLE", "RUF", "UP"]
+ignore = [
+    "E501",   # longueur de ligne : déléguée à `ruff format`, qui ne
+              # retouche ni docstrings ni commentaires
+    "RUF001", # symboles normatifs EC2 (λ, α, ρ, Ø, ², ·) et ponctuation
+    "RUF002", # française (« », —) : vocabulaire du domaine, pas des
+    "RUF003", # caractères posés par erreur
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["BLE001"]

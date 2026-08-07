@@ -57,7 +57,7 @@ def calculer_cnom(
     except KeyError:
         raise ClasseExpositionInvalideException(
             f"Classe d'exposition inconnue : {classe_exposition}"
-        )
+        ) from None
 
     try:
         structure = classe[classe_structurale]
@@ -65,7 +65,7 @@ def calculer_cnom(
         raise ClasseExpositionInvalideException(
             f"Classe structurale inconnue : {classe_structurale} "
             f"(pour la classe d'exposition {classe_exposition})"
-        )
+        ) from None
 
     cmin_dur_mm = structure["cmin_dur_mm"]
     cnom_mm = cmin_dur_mm + DELTA_CDEV_MM

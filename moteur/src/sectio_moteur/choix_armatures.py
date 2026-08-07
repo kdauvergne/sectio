@@ -119,7 +119,7 @@ def choisir_combinaison_par_defaut(
 def calculer_aire_barre(diametre_mm: float) -> float:
     """
     Calcule l'aire de la section d'une barre d'armature. Avec Aφ l'aire de la section et  Øl le diamètre nominal.
-    Formule : Aφ = π × Øl² / 4
+    Formule : Aφ = π x Øl² / 4
     """
     return (pi * diametre_mm**2 / 4) / 100
 

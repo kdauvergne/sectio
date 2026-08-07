@@ -241,7 +241,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
 
 """
 Fonctions indépendantes de calculs purs, nécessaires au calcul final (calculer_lambda, calculer_alpha, calculer_ks, calculer_kh, plus_petite_dimension)
-Rôle dans le moteur : λ, α, kh, ks sont les 4 coefficients qui composent NRd = kh·ks·α·(Ac·fcd + As·fyd). 
+Rôle dans le moteur : λ, α, kh, ks sont les 4 coefficients qui composent NRd = kh·ks·α·(Ac·fcd + As·fyd).
 α, kh et ks sont des coefficients correcteurs de la norme EC2, qui ajustent la résistance théorique du poteau pour tenir compte du flambement (α), de l'épaisseur du poteau (kh) et du type d'acier (ks).
 Sans eux, impossible d'écrire l'équation en As.
 """

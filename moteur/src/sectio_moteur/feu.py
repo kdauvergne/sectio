@@ -83,7 +83,7 @@ def convertir_duree(valeur: str) -> DureeResistanceFeu:
     try:
         return DureeResistanceFeu[valeur]
     except KeyError:
-        raise DureeResistanceFeuInvalideException(valeur)
+        raise DureeResistanceFeuInvalideException(valeur) from None
 
 
 # def _charger_table_feu(chemin: Path) -> dict:
