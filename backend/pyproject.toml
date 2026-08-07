@@ -1,0 +1,31 @@
+[project]
+name = "sectio-backend"
+version = "0.1.0"
+description = "backend de l'application Sectio"
+authors = [
+    {name = "kdauvergne",email = "keysone.dauvergne@gmail.com"}
+]
+requires-python = ">=3.12"
+dependencies = [
+    "django (>=6.1,<7.0)",
+    "djangorestframework (>=3.18.0,<4.0.0)",
+    "psycopg[binary] (>=3.3.4,<4.0.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)",
+    "django-cors-headers (>=4.9.0,<5.0.0)",
+    "sectio-moteur @ file:///Users/ks/Documents/Projets/_Sectio/02_Developpement/sectio/moteur"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-django (>=4.13.0,<5.0.0)",
+    "ruff (>=0.16.2,<0.17.0)"
+]
+
+[tool.poetry.dependencies]
+sectio-moteur = {develop = true}
