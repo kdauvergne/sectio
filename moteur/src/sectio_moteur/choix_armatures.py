@@ -88,25 +88,24 @@ def choisir_combinaison_par_defaut(
     """Retient la combinaison par défaut parmi celles proposées par choix_armatures.
 
     Utilisée par calculer(): parmi toutes les combinaisons constructibles,
-    l'As_réel le plus petit est retenu — donc la disposition qui gaspille
-    le moins d'acier au-delà du As théorique visé.
+    retient celle qui a le moins de barres — en cas d'égalité du nombre de
+    barres, retient le plus petit diamètre parmi les ex-aequo (évite le
+    surdimensionnement inutile).
 
     Paramètres:
         combinaisons: liste de couples (n, diametre_mm) déjà validés par
         choix_armatures (filtres réglementaire et géométrique passés).
 
     Retourne:
-        Le couple (n, diametre_mm) dont l'As_réel (n * calculer_aire_barre)
-        est le plus petit donc la disposition qui gaspille le moins d'acier.
+        Le couple (n, diametre_mm) avec n minimal ; en cas d'égalité de n,
+        celui avec le diametre_mm le plus petit.
 
     Note:
         Pas de départage explicite en cas d'égalité stricte d'As_réel :
         min() retient alors le premier trouvé dans l'ordre de la liste.
     """
-    return min(
-        combinaisons,
-        key=lambda c: c[0] * calculer_aire_barre(c[1]),
-    )
+
+    return min(combinaisons, key=lambda c: (c[0], c[1]))
 
 
 def calculer_aire_barre(diametre_mm: float) -> float:
