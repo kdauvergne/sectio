@@ -23,6 +23,9 @@ DIAMETRES_NORMALISES = [
 
 ESPACEMENT_MIN_BARRES_MM = 30.0  # EC2 art.8.2(2)
 M_VERS_MM = 1000.0  # convertit b/h/diametre (m, PoteauInput) en mm
+N_BARRES_MIN_CIRCULAIRE = (
+    6  # nombre minimum de barres pour un poteau de type circulaire
+)
 
 # Constantes normées par l'EC2 pour les cadres
 DIAMETRE_CADRE_MIN_MM = 6.0
@@ -30,6 +33,8 @@ ESPACEMENT_CADRES_MAX_MM = 400.0
 FACTEUR_ESPACEMENT_DIAMETRE = 20
 FACTEUR_ESPACEMENT_EXTREMITES = 0.6
 FACTEUR_DIAMETRE_CADRE = 4
+ECARTEMENT_MAX_BARRES_MM = 400.0
+SURPLUS_ECARTEMENT_MM = 100.0  # a + 100
 
 
 def choix_armatures(
@@ -40,9 +45,12 @@ def choix_armatures(
     """Combinaisons (n, Øl) reellement constructibles pour un As theorique.
 
     Balaie les diamètres normalisés (DIAMETRES_NORMALISES).
-    Pour chacun, calcule le nombre de barres nécessaire (arrondi et
-    ajusté par ajuster_nombre_barres), puis ne retient la combinaison
-    que si elle passe deux filtres indépendants :
+    Pour chacun, le nombre de barres retenu satisfait deux exigences
+    simultanées : fournir assez d'acier (as_theorique) et respecter
+    l'écartement maximal entre barres (calculer_n_min_geometrique).
+    Le résultat est ensuite mis en forme par ajuster_nombre_barres.
+    La combinaison n'est conservée que si elle passe deux filtres
+    indépendants :
     - la quantité d'acier reste sous as_max (filtre réglementaire),
     - et le nombre de barres tient physiquement dans le périmètre utile
     de la section (filtre géométrique, calculer_n_max_geometrique).
@@ -61,13 +69,17 @@ def choix_armatures(
         FerraillageImpossibleException: si aucun diamètre normalisé ne
         passe les deux filtres.
     """
-
+    n_min_geometrique = calculer_n_min_geometrique(entree)
     combinaisons = []
 
     for diametre in DIAMETRES_NORMALISES:
         aire = calculer_aire_barre(diametre)
-        n = ceil(as_theorique / aire)
-        n = ajuster_nombre_barres(n, entree.type_section)
+
+        n_pour_acier = ceil(as_theorique / aire)
+        n = ajuster_nombre_barres(
+            max(n_pour_acier, n_min_geometrique), entree.type_section
+        )
+
         as_reel = n * aire
         if as_reel > as_max:
             continue
@@ -215,3 +227,44 @@ def calculer_armatures_transversales(
     e_extremites = FACTEUR_ESPACEMENT_EXTREMITES * e_central
 
     return diametre_cadre, e_central, e_extremites
+
+
+def calculer_n_min_geometrique(entree: PoteauInput) -> int:
+    """
+    Calcule le nombre minimal de barres longitudinales imposé par
+    l'écartement maximal admissible entre deux barres voisines.
+
+    En circulaire, la règle ne s'applique pas : retourne le minimum
+    réglementaire de 6 barres.
+
+    En rectangulaire, l'écartement maximal vaut min(a + 100mm ; 400mm),
+    avec a = plus petite dimension de la section. Le nombre de barres par
+    côté en découle, puis le total (les 4 barres d'angle étant comptées
+    une seule fois).
+
+    Paramètres:
+        entree (PoteauInput): Données du poteau.
+
+    Retourne:
+        int: Nombre minimal de barres imposé par la géométrie.
+
+    Erreur:
+        Lève DimensionsManquantesException si b ou h vaut None en rectangulaire.
+    """
+    if entree.type_section == TYPE_CIRCULAIRE:
+        return N_BARRES_MIN_CIRCULAIRE
+
+    plus_petite_dimension_mm = plus_petite_dimension(entree) * M_VERS_MM
+    e_max = min(
+        plus_petite_dimension_mm + SURPLUS_ECARTEMENT_MM, ECARTEMENT_MAX_BARRES_MM
+    )
+    if entree.b is None or entree.h is None:
+        raise DimensionsManquantesException()
+    entraxe_b = (entree.b - 2 * entree.d_prime) * M_VERS_MM
+    n_b = ceil(entraxe_b / e_max) + 1
+
+    entraxe_h = (entree.h - 2 * entree.d_prime) * M_VERS_MM
+    n_h = ceil(entraxe_h / e_max) + 1
+
+    n_total = (2 * n_b + 2 * n_h) - 4
+    return n_total
