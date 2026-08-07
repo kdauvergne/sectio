@@ -15,12 +15,13 @@ def test_poteau_input_est_immuable():
         L0=3,
         d_prime=0.04,
         type_section="circulaire",
-        diametre=500
+        diametre=500,
     )
 
     assert poteau.diametre == 500
     assert poteau.b is None
     assert poteau.h is None
+
 
 def test_creation_resultat_poteau():
 
@@ -35,12 +36,13 @@ def test_creation_resultat_poteau():
         kh=1,
         ks=1,
         rho=0.02,
-        delta=0.1
+        delta=0.1,
     )
 
     assert resultat.As == 12.5
     assert resultat.NRd == 1500
     assert resultat.taux_travail == 1.2
+
 
 def test_resultat_poteau_est_immuable():
 
@@ -55,11 +57,12 @@ def test_resultat_poteau_est_immuable():
         kh=1,
         ks=1,
         rho=0.02,
-        delta=0.1
+        delta=0.1,
     )
 
     with pytest.raises(FrozenInstanceError):
-        resultat.NRd = 2000 # type: ignore
+        resultat.NRd = 2000  # type: ignore
+
 
 def test_resultat_poteau_cree_sans_armatures_transversales():
 
@@ -74,7 +77,7 @@ def test_resultat_poteau_cree_sans_armatures_transversales():
         kh=1,
         ks=1,
         rho=0.02,
-        delta=0.1
+        delta=0.1,
     )
 
     assert resultat.As == 12.5

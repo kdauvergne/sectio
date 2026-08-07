@@ -131,7 +131,6 @@ class TestCalculer:
 
 
 class TestVerifier:
-
     def test_verifier_reproduit_calculer(self, creer_entree):
         entree = creer_entree(L0=2.829, b=0.30, h=0.30, G=1209.0, Q=200.0)
         methode = MethodeSimplifiee()

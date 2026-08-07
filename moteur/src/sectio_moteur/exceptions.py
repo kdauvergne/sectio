@@ -6,6 +6,7 @@ class SectioException(Exception):
     AttributeError…), qui doivent, eux, remonter.
     """
 
+
 class TypeSectionInvalideException(SectioException):
     pass
 
