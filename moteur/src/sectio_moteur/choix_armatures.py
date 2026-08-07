@@ -99,10 +99,6 @@ def choisir_combinaison_par_defaut(
     Retourne:
         Le couple (n, diametre_mm) avec n minimal ; en cas d'égalité de n,
         celui avec le diametre_mm le plus petit.
-
-    Note:
-        Pas de départage explicite en cas d'égalité stricte d'As_réel :
-        min() retient alors le premier trouvé dans l'ordre de la liste.
     """
 
     return min(combinaisons, key=lambda c: (c[0], c[1]))
