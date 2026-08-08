@@ -311,20 +311,6 @@ files = [
 ]
 
 [[package]]
-name = "sectio-moteur"
-version = "0.1.0"
-description = "Moteur de calcul méthode simplifiée selon Eurocode 2"
-optional = false
-python-versions = ">=3.12"
-groups = ["main"]
-files = []
-develop = true
-
-[package.source]
-type = "directory"
-url = "../moteur"
-
-[[package]]
 name = "sqlparse"
 version = "0.5.5"
 description = "A non-validating SQL parser."
@@ -369,4 +355,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "57d8d88a1a044d3a884c671d2d56485a3033b9b5467fe3782dacdc45a336a16f"
+content-hash = "0580903f030feb6412f69903e368f1b8862627eb7a0e7517595fde2fa289030c"

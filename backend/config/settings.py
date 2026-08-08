@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "corsheaders",
     # Applications du projet
     "comptes",
+    "projets",
+    "calculs",
 ]
 
 AUTH_USER_MODEL = "comptes.Utilisateur"  # = nom_app.NomModele
@@ -146,3 +148,15 @@ MAILERS = {
         "BACKEND": "django.core.mail.backends.console.EmailBackend",
     },
 }
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
