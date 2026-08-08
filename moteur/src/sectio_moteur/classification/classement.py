@@ -59,7 +59,8 @@ def proposer_types(
     if restants:
         as_candidat = resultat_1.As
         poteaux_type_3 = [p for p, r in restants]
-        resultat_3 = methode.verifier(as_candidat, poteaux_type_3[0])
+        poteau_3, _ = max(restants, key=lambda couple: couple[1].As)
+        resultat_3 = methode.verifier(as_candidat, poteau_3)
         type_3 = TypeFerraillage(resultat=resultat_3, poteaux_couverts=poteaux_type_3)
     else:
         type_3 = None
