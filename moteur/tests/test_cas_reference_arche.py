@@ -57,6 +57,68 @@ def poteau_carre_44cm():
     )
 
 
+@pytest.fixture
+def poteau_carre_50cm():
+    """Cas D — poteau carré 0.50x0.50."""
+    return PoteauInput(
+        type_section=TYPE_RECTANGULAIRE,
+        L0=5.00,
+        b=0.50,
+        h=0.50,
+        diametre=None,
+        fck=45,
+        fyk=500,
+        d_prime=0.045,
+        G=2530.7,
+        Q=2000.0,
+    )
+
+
+@pytest.fixture
+def cas_E_poteau_circulaire_50cm():
+    """Cas E — poteau circulaire 0.50m"""
+    return PoteauInput(
+        type_section=TYPE_CIRCULAIRE,
+        L0=5.00,
+        diametre=0.50,
+        fck=45,
+        fyk=500,
+        d_prime=0.041,
+        G=1524.1,
+        Q=1000.0,
+    )
+
+
+@pytest.fixture
+def cas_F_poteau_50x40_fck45():
+    return PoteauInput(
+        type_section=TYPE_RECTANGULAIRE,
+        b=0.50,
+        h=0.40,
+        fck=45,
+        fyk=500,
+        L0=5.00,
+        d_prime=0.045,
+        G=1524.5,
+        Q=1500.0,
+    )
+
+
+@pytest.fixture
+def cas_G_poteau_50x40_fck25():
+    return PoteauInput(
+        type_section=TYPE_RECTANGULAIRE,
+        b=0.50,
+        h=0.40,
+        fck=25,
+        fyk=500,
+        L0=5.00,
+        d_prime=0.045,
+        G=1524.5,
+        Q=1000.0,
+    )
+
+
 class TestCasReferenceArcheA:
     """Circulaire D=0,50m — ferraillage réel Arche : 6HA14, cadres HA6/14."""
 
@@ -121,3 +183,65 @@ class TestCasReferenceArcheC:
     def test_cadres_diametre(self, poteau_carre_44cm):
         r = MethodeSimplifiee().calculer(poteau_carre_44cm)
         assert r.diametre_cadres == pytest.approx(6.0)
+
+
+class TestCasReferenceArcheD:
+    """Carré 0,50×0,50m, L0=5,00m — ferraillage réel Arche : 12HA25
+    Cas limite h=0,50m"""
+
+    def test_as_theorique(self, poteau_carre_50cm):
+        r = MethodeSimplifiee().calculer(poteau_carre_50cm)
+        assert r.As == pytest.approx(55.40, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_ferraillage_reel_arche_dans_combinaisons(self, poteau_carre_50cm):
+        r = MethodeSimplifiee().calculer(poteau_carre_50cm)
+        assert r.combinaisons_possibles is not None
+        assert (12, 25) in r.combinaisons_possibles
+
+    def test_nrd_avec_ferraillage_reel(self, poteau_carre_50cm):
+        r = MethodeSimplifiee().verifier(58.90, poteau_carre_50cm)
+        assert r.NRd == pytest.approx(6510.0, rel=1e-4)
+
+    def test_cadres_diametre(self, poteau_carre_50cm):
+        r = MethodeSimplifiee().calculer(poteau_carre_50cm)
+        assert r.diametre_cadres == pytest.approx(8.0)
+
+
+class TestCasReferenceArcheE:
+    """Circulaire D=0,50m, L0=5,00m — ferraillage réel Arche : 12HA20"""
+
+    def test_as_theorique(self, cas_E_poteau_circulaire_50cm):
+        r = MethodeSimplifiee().calculer(cas_E_poteau_circulaire_50cm)
+        assert r.As == pytest.approx(29.34, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_nrd_avec_ferraillage_reel(self, cas_E_poteau_circulaire_50cm):
+        r = MethodeSimplifiee().verifier(37.70, cas_E_poteau_circulaire_50cm)
+        assert r.NRd == pytest.approx(3727.4, rel=1e-4)
+
+
+class TestCasReferenceArcheF:
+    """Rectangulaire 0,50×0,40m, fck=45 — ferraillage réel Arche : 8HA25+2HA20"""
+
+    def test_as_theorique(self, cas_F_poteau_50x40_fck45):
+        r = MethodeSimplifiee().calculer(cas_F_poteau_50x40_fck45)
+        assert r.As == pytest.approx(45.23, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_nrd_avec_ferraillage_reel(self, cas_F_poteau_50x40_fck45):
+        r = MethodeSimplifiee().verifier(45.55, cas_F_poteau_50x40_fck45)
+        assert r.NRd == pytest.approx(4315.0, rel=1e-4)
+
+
+class TestCasReferenceArcheG:
+    """Rectangulaire 0,50×0,40m, fck=25 — ferraillage réel Arche : 12HA25+6HA20"""
+
+    def test_as_theorique(self, cas_G_poteau_50x40_fck25):
+        r = MethodeSimplifiee().calculer(cas_G_poteau_50x40_fck25)
+        assert r.As == pytest.approx(76.30, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_nrd_avec_ferraillage_reel(self, cas_G_poteau_50x40_fck25):
+        r = MethodeSimplifiee().verifier(77.75, cas_G_poteau_50x40_fck25)
+        assert r.NRd == pytest.approx(3590.1, rel=1e-4)
