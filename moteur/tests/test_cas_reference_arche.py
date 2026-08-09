@@ -119,6 +119,93 @@ def cas_G_poteau_50x40_fck25():
     )
 
 
+@pytest.fixture
+def cas_H_circulaire_60cm():
+    return PoteauInput(
+        type_section=TYPE_CIRCULAIRE,
+        diametre=0.60,
+        fck=45,
+        fyk=500,
+        L0=3.00,
+        d_prime=0.038,
+        G=4520.8,
+        Q=1500.0,
+    )
+
+
+@pytest.fixture
+def cas_I_circulaire_70cm():
+    return PoteauInput(
+        type_section=TYPE_CIRCULAIRE,
+        diametre=0.70,
+        fck=45,
+        fyk=500,
+        L0=5.00,
+        d_prime=0.041,
+        G=5547.2,
+        Q=1800.0,
+    )
+
+
+@pytest.fixture
+def cas_J_circulaire_40cm_elance():
+    return PoteauInput(
+        type_section=TYPE_CIRCULAIRE,
+        diametre=0.40,
+        fck=45,
+        fyk=500,
+        L0=6.50,
+        d_prime=0.036,
+        G=820.0,
+        Q=300.0,
+    )
+
+
+@pytest.fixture
+def cas_K_carre_30cm_elance():
+    return PoteauInput(
+        type_section=TYPE_RECTANGULAIRE,
+        b=0.30,
+        h=0.30,
+        fck=45,
+        fyk=500,
+        L0=6.00,
+        d_prime=0.036,
+        G=663.2,
+        Q=200.0,
+    )
+
+
+@pytest.fixture
+def cas_L_poteau_50x40_fck20():
+    return PoteauInput(
+        type_section=TYPE_RECTANGULAIRE,
+        b=0.50,
+        h=0.40,
+        fck=20,
+        fyk=500,
+        L0=5.00,
+        d_prime=0.040,
+        G=1424.5,
+        Q=450.0,
+    )
+
+
+@pytest.fixture
+def cas_M_poteau_50x40_fck50():
+    return PoteauInput(
+        type_section=TYPE_RECTANGULAIRE,
+        b=0.50,
+        h=0.40,
+        fck=50,
+        fyk=500,
+        L0=5.00,
+        d_prime=0.040,
+        G=2624.5,
+        Q=900.0,
+    )
+
+
 class TestCasReferenceArcheA:
     """Circulaire D=0,50m — ferraillage réel Arche : 6HA14, cadres HA6/14."""
 
@@ -245,3 +332,129 @@ class TestCasReferenceArcheG:
     def test_nrd_avec_ferraillage_reel(self, cas_G_poteau_50x40_fck25):
         r = MethodeSimplifiee().verifier(77.75, cas_G_poteau_50x40_fck25)
         assert r.NRd == pytest.approx(3590.1, rel=1e-4)
+
+
+class TestCasReferenceArcheH:
+    """Circulaire D=0,60m — ferraillage réel Arche : 14HA25, cadres HA6.
+
+    <!> CAS FRONTIÈRE — NE PAS "SYMÉTRISER" AVEC LE RECTANGULAIRE.
+    """
+
+    def test_as_theorique(self, cas_H_circulaire_60cm):
+        r = MethodeSimplifiee().calculer(cas_H_circulaire_60cm)
+        assert r.As == pytest.approx(67.46, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_branche_lineaire_a_la_frontiere(self, cas_H_circulaire_60cm):
+        r = MethodeSimplifiee().calculer(cas_H_circulaire_60cm)
+        assert r.kh == pytest.approx(1.0)
+
+    def test_ferraillage_reel_arche_dans_combinaisons(self, cas_H_circulaire_60cm):
+        r = MethodeSimplifiee().calculer(cas_H_circulaire_60cm)
+        assert r.combinaisons_possibles is not None
+        assert (14, 25) in r.combinaisons_possibles
+
+    def test_nrd_avec_ferraillage_reel(self, cas_H_circulaire_60cm):
+        r = MethodeSimplifiee().verifier(68.72, cas_H_circulaire_60cm)
+        assert r.NRd == pytest.approx(8393.2944, rel=1e-4)
+
+
+class TestCasReferenceArcheI:
+    """Circulaire D=0,70m — ferraillage réel Arche : 24HA25, cadres HA8.
+
+    Seul cas exerçant la branche linéaire en circulaire.
+    """
+
+    def test_as_theorique(self, cas_I_circulaire_70cm):
+        r = MethodeSimplifiee().calculer(cas_I_circulaire_70cm)
+        assert r.As == pytest.approx(97.66, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_kh_vaut_un(self, cas_I_circulaire_70cm):
+        r = MethodeSimplifiee().calculer(cas_I_circulaire_70cm)
+        assert r.kh == pytest.approx(1.0)
+
+    def test_nrd_avec_ferraillage_reel(self, cas_I_circulaire_70cm):
+        r = MethodeSimplifiee().verifier(117.81, cas_I_circulaire_70cm)
+        assert r.NRd == pytest.approx(10754.1030, rel=1e-4)
+
+
+class TestCasReferenceArcheJ:
+    """Circulaire D=0,40m, L0=6,50m — ferraillage réel Arche : 12HA20, cadres HA6.
+
+    λ=65 : seul cas exerçant α = (27/λ)^1,24 (circulaire, λ>60).
+    """
+
+    def test_as_theorique(self, cas_J_circulaire_40cm_elance):
+        r = MethodeSimplifiee().calculer(cas_J_circulaire_40cm_elance)
+        assert r.As == pytest.approx(33.91, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_lambda_declenche_seconde_branche_alpha(self, cas_J_circulaire_40cm_elance):
+        r = MethodeSimplifiee().calculer(cas_J_circulaire_40cm_elance)
+        assert r.lambda_ == pytest.approx(65.0, rel=1e-3)
+        assert r.alpha == pytest.approx((27 / 65.0) ** 1.24, rel=1e-6)
+
+    def test_nrd_avec_ferraillage_reel(self, cas_J_circulaire_40cm_elance):
+        r = MethodeSimplifiee().verifier(37.70, cas_J_circulaire_40cm_elance)
+        assert r.NRd == pytest.approx(1602.3506, rel=1e-4)
+
+
+class TestCasReferenceArcheK:
+    """Carré 0,30×0,30m, L0=6,00m — ferraillage réel Arche : 6HA20+2HA16, cadres HA6.
+
+    <!> Ferraillage panaché (deux diamètres) : non modélisé par
+    choix_armatures(), aucune assertion sur combinaisons_possibles.
+    """
+
+    def test_as_theorique(self, cas_K_carre_30cm_elance):
+        r = MethodeSimplifiee().calculer(cas_K_carre_30cm_elance)
+        assert r.As == pytest.approx(22.84, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_lambda_declenche_seconde_branche_alpha(self, cas_K_carre_30cm_elance):
+        r = MethodeSimplifiee().calculer(cas_K_carre_30cm_elance)
+        assert r.lambda_ == pytest.approx(69.28, rel=1e-3)
+        assert r.alpha == pytest.approx((32 / r.lambda_) ** 1.3, rel=1e-6)
+
+    def test_nrd_avec_ferraillage_reel(self, cas_K_carre_30cm_elance):
+        r = MethodeSimplifiee().verifier(22.87, cas_K_carre_30cm_elance)
+        assert r.NRd == pytest.approx(1195.7738, rel=1e-4)
+
+
+class TestCasReferenceArcheL:
+    """Rectangulaire 0,50×0,40m, fck=20 — ferraillage réel Arche : 4HA25+10HA20.
+
+    Borne basse du domaine d'application (20 ≤ fck ≤ 50).
+    """
+
+    def test_as_theorique(self, cas_L_poteau_50x40_fck20):
+        r = MethodeSimplifiee().calculer(cas_L_poteau_50x40_fck20)
+        assert r.As == pytest.approx(49.13, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_methode_applicable_a_la_borne_basse(self, cas_L_poteau_50x40_fck20):
+        assert MethodeSimplifiee().est_applicable(cas_L_poteau_50x40_fck20) == []
+
+    def test_nrd_avec_ferraillage_reel(self, cas_L_poteau_50x40_fck20):
+        r = MethodeSimplifiee().verifier(51.05, cas_L_poteau_50x40_fck20)
+        assert r.NRd == pytest.approx(2642.1455, rel=1e-4)
+
+
+class TestCasReferenceArcheM:
+    """Rectangulaire 0,50×0,40m, fck=50 — ferraillage réel Arche : 10HA25+4HA20.
+
+    Borne haute du domaine d'application (20 ≤ fck ≤ 50).
+    """
+
+    def test_as_theorique(self, cas_M_poteau_50x40_fck50):
+        r = MethodeSimplifiee().calculer(cas_M_poteau_50x40_fck50)
+        assert r.As == pytest.approx(55.10, rel=1e-3)
+        assert r.as_min_gouverne is False
+
+    def test_methode_applicable_a_la_borne_haute(self, cas_M_poteau_50x40_fck50):
+        assert MethodeSimplifiee().est_applicable(cas_M_poteau_50x40_fck50) == []
+
+    def test_nrd_avec_ferraillage_reel(self, cas_M_poteau_50x40_fck50):
+        r = MethodeSimplifiee().verifier(61.65, cas_M_poteau_50x40_fck50)
+        assert r.NRd == pytest.approx(5037.9611, rel=1e-4)

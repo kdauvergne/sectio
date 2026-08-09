@@ -140,7 +140,7 @@ class MethodeSimplifiee(MethodeCalculPoteauInterface):
         grandeurs = grandeurs_communes(entree)
 
         if (entree.type_section == TYPE_RECTANGULAIRE and grandeurs.h_ou_d <= 0.5) or (
-            entree.type_section == TYPE_CIRCULAIRE and grandeurs.h_ou_d <= 0.60
+            entree.type_section == TYPE_CIRCULAIRE and grandeurs.h_ou_d < 0.60
         ):
             a, b, c = calculer_coefficients_quadratique(
                 grandeurs.NEd,
@@ -334,7 +334,7 @@ def calculer_kh(h_ou_d: float, rho: float, delta: float, type_section: str) -> f
         else:
             return 1.0
     elif type_section == TYPE_CIRCULAIRE:
-        if h_ou_d <= 0.60:
+        if h_ou_d < 0.60:
             return (KH_ORDONNEE_CIRC + KH_PENTE * h_ou_d) * (
                 1 - KH_FACTEUR_RHO_DELTA_CIRC * rho * delta
             )
