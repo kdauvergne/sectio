@@ -22,7 +22,7 @@ class PoteauInlineParType(admin.TabularInline):
     model = Poteau
     extra = 0
     fields = ("repere", "type_section", "taille_affichage", "L0", "G", "Q")
-    readonly_fields = ("taille_affichage",)  # noqa: RUF012
+    readonly_fields = ("taille_affichage",)
 
     @admin.display(description="Taille")
     def taille_affichage(self, obj) -> str:

@@ -35,7 +35,10 @@ class Projet(models.Model):
     date_creation = models.DateTimeField("date de création", auto_now_add=True)
 
     membres = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="projets", verbose_name="membres"
+        settings.AUTH_USER_MODEL,
+        related_name="projets",
+        verbose_name="membres",
+        blank=True,
     )
 
     # Hypothèses générales recopiées depuis Projet dans les autres paliers inférieurs. Valeurs défauts métier.
