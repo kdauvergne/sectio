@@ -67,6 +67,24 @@ class PoteauSerializer(serializers.ModelSerializer):
             "classe_exposition",
         ]
 
+    def validate(self, attrs):
+        type_section = attrs.get("type_section")
+
+        if type_section == Poteau.TypeSection.RECTANGULAIRE and (
+            attrs.get("b") is None or attrs.get("h") is None
+        ):
+            raise serializers.ValidationError("Une section rectangulaire exige b et h.")
+
+        if (
+            type_section == Poteau.TypeSection.CIRCULAIRE
+            and attrs.get("diametre") is None
+        ):
+            raise serializers.ValidationError(
+                "Une section circulaire exige le diamètre."
+            )
+
+        return attrs
+
     def validate_type_poteau(self, type_poteau):
         if type_poteau is None:
             return None
