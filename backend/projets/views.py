@@ -18,7 +18,9 @@ class ProjetViewSet(viewsets.ModelViewSet):
     """CRUD complet sur les projets."""
 
     def get_queryset(self) -> QuerySet[Projet]:  # type: ignore[override]
-        return Projet.objects.filter(membres=self.request.user)
+        return Projet.objects.filter(membres=self.request.user).prefetch_related(
+            "batiments"
+        )
 
     def perform_create(self, serializer):
         projet = serializer.save()
@@ -45,7 +47,7 @@ class BatimentViewSet(viewsets.ModelViewSet):
         if projet:
             queryset = queryset.filter(projet_id=projet)
 
-        return queryset.select_related("projet")
+        return queryset.select_related("projet").prefetch_related("niveaux")
 
 
 class NiveauViewSet(viewsets.ModelViewSet):
@@ -65,7 +67,7 @@ class NiveauViewSet(viewsets.ModelViewSet):
         if batiment:
             queryset = queryset.filter(batiment_id=batiment)
 
-        return queryset.select_related("batiment__projet")
+        return queryset.select_related("batiment__projet").prefetch_related("poteaux")
 
 
 class PoteauViewSet(viewsets.ModelViewSet):
