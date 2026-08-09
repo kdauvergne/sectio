@@ -6,8 +6,9 @@ from projets.models import Projet
 @pytest.fixture
 def utilisateur(django_user_model):
     return django_user_model.objects.create_user(
-        username="pierre",
         email="pierre@exemple.fr",
+        first_name="Pierre",
+        last_name="Dupont",
         password="motdepasse",
     )
 
