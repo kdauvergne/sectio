@@ -1,3 +1,11 @@
-from django.shortcuts import render
+from rest_framework import viewsets
 
-# Create your views here.
+from .models import Projet
+from .serializers import ProjetSerializer
+
+
+class ProjetViewSet(viewsets.ModelViewSet):
+    """CRUD complet sur les projets."""
+
+    queryset = Projet.objects.all()
+    serializer_class = ProjetSerializer
