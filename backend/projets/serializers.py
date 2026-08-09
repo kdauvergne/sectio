@@ -24,11 +24,23 @@ class BatimentSerializer(serializers.ModelSerializer):
         model = Batiment
         fields = ["id", "projet", "nom", "fck", "fyk", "classe_exposition"]  # noqa: RUF012
 
+    def validate_projet(self, projet):
+        utilisateur = self.context["request"].user
+        if not projet.membres.filter(pk=utilisateur.pk).exists():
+            raise serializers.ValidationError("Projet inconnu.")
+        return projet
+
 
 class NiveauSerializer(serializers.ModelSerializer):
     class Meta:
         model = Niveau
         fields = ["id", "batiment", "nom", "ordre", "fck", "fyk", "classe_exposition"]  # noqa: RUF012
+
+    def validate_batiment(self, batiment):
+        utilisateur = self.context["request"].user
+        if not batiment.projet.membres.filter(pk=utilisateur.pk).exists():
+            raise serializers.ValidationError("Bâtiment inconnu.")
+        return batiment
 
 
 class PoteauSerializer(serializers.ModelSerializer):
@@ -65,6 +77,12 @@ class PoteauSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Type de poteau inconnu.")
 
         return type_poteau
+
+    def validate_niveau(self, niveau):
+        utilisateur = self.context["request"].user
+        if not niveau.batiment.projet.membres.filter(pk=utilisateur.pk).exists():
+            raise serializers.ValidationError("Niveau inconnu.")
+        return niveau
 
 
 class ProjetDetailSerializer(ProjetSerializer):
