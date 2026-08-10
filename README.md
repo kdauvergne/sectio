@@ -83,13 +83,13 @@ Poteau (Graitec)**, avec un écart inférieur à 0,01 % sur l'effort résistant 
 
 ### Stack technique
 
-| Domaine | Choix |
-|---|---|
-| Moteur de calcul | Python 3.12+, Poetry, pytest, Ruff (lint + format) |
-| Backend | Django, Django REST Framework, PostgreSQL, JWT (djangorestframework-simplejwt) |
-| Frontend | React, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, React Router |
-| Export | WeasyPrint (notes de calcul PDF) |
-| CI/CD | GitHub Actions, Docker |
+| Domaine          | Choix                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| Moteur de calcul | Python 3.12+, Poetry, pytest, Ruff (lint + format)                                        |
+| Backend          | Django, Django REST Framework, PostgreSQL, JWT (djangorestframework-simplejwt)            |
+| Frontend         | React, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, React Router |
+| Export           | WeasyPrint (notes de calcul PDF)                                                          |
+| CI/CD            | GitHub Actions, Docker                                                                    |
 
 ### Démarrer avec le moteur
 
@@ -110,10 +110,10 @@ La CI (`.github/workflows/moteur-ci.yml`) exécute ces mêmes vérifications sur
 
 ### État d'avancement
 
-- ✅ Moteur de calcul : méthode simplifiée (flambement), choix des armatures, module feu — validés
+- Moteur de calcul : méthode simplifiée (flambement), choix des armatures, module feu — validés
   sur cas de référence Arche.
-- 🚧 Backend Django : modèle de données figé (MCD/MLD), implémentation en cours.
-- ⏳ Frontend : maquettes et développement à venir.
+- Backend Django : modèle de données figé (MCD/MLD), implémentation en cours.
+- Frontend : maquettes et développement à venir.
 
 ---
 
@@ -175,7 +175,6 @@ even though English is the usual convention in software development:
   against the regulatory texts (EC2, Arche guides), which will always stay in French;
 - it's a deliberate choice driven by domain consistency, not a limitation.
 
-
 ### Calculation method
 
 EC2 simplified method (FD P18-717, art. 5.8.5(51)), for rectangular and circular sections under
@@ -188,13 +187,13 @@ The engine is validated against reference calculation notes produced with **Arch
 
 ### Tech stack
 
-| Area | Choice |
-|---|---|
-| Calculation engine | Python 3.12+, Poetry, pytest, Ruff (lint + format) |
-| Backend | Django, Django REST Framework, PostgreSQL, JWT (djangorestframework-simplejwt) |
-| Frontend | React, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, React Router |
-| Export | WeasyPrint (PDF calculation notes) |
-| CI/CD | GitHub Actions, Docker |
+| Area               | Choice                                                                                    |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| Calculation engine | Python 3.12+, Poetry, pytest, Ruff (lint + format)                                        |
+| Backend            | Django, Django REST Framework, PostgreSQL, JWT (djangorestframework-simplejwt)            |
+| Frontend           | React, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, React Router |
+| Export             | WeasyPrint (PDF calculation notes)                                                        |
+| CI/CD              | GitHub Actions, Docker                                                                    |
 
 ### Getting started with the engine
 
@@ -215,7 +214,7 @@ change to the `moteur/` directory.
 
 ### Current status
 
-- ✅ Calculation engine: simplified method (buckling), rebar selection, fire module — validated
+- Calculation engine: simplified method (buckling), rebar selection, fire module — validated
   against Arche reference cases.
-- 🚧 Django backend: data model finalized (MCD/MLD), implementation in progress.
-- ⏳ Frontend: mockups and development to come.
+- Django backend: data model finalized (MCD/MLD), implementation in progress.
+- Frontend: mockups and development to come.
