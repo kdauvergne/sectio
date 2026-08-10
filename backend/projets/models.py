@@ -171,6 +171,9 @@ class Poteau(HypothesesHeritees):
                 ),
                 name="dimensions_coherentes_avec_type_section",
             ),
+            models.UniqueConstraint(
+                fields=["niveau", "repere"], name="repere_unique_par_niveau"
+            ),
         ]
 
     @property

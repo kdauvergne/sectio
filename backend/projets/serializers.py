@@ -1,3 +1,5 @@
+from collections import Counter
+
 from rest_framework import serializers
 
 from .models import Batiment, Niveau, Poteau, Projet
@@ -43,6 +45,31 @@ class NiveauSerializer(serializers.ModelSerializer):
         return batiment
 
 
+class PoteauListSerializer(serializers.ListSerializer):
+    """Borne la taille d'une création en lot et interdit les repères en double."""
+
+    MAX_ELEMENTS = 100
+
+    def validate(self, attrs):
+        if len(attrs) > self.MAX_ELEMENTS:
+            raise serializers.ValidationError(
+                f"Maximum {self.MAX_ELEMENTS} poteaux par envoi."
+            )
+
+        compteur = Counter(
+            (element["niveau"].pk, element["repere"]) for element in attrs
+        )
+        doublons = sorted(
+            repere for (_, repere), nombre in compteur.items() if nombre > 1
+        )
+        if doublons:
+            raise serializers.ValidationError(
+                f"Repères en double dans l'envoi : {', '.join(doublons)}."
+            )
+
+        return attrs
+
+
 class PoteauSerializer(serializers.ModelSerializer):
     class Meta:
         model = Poteau
@@ -66,6 +93,7 @@ class PoteauSerializer(serializers.ModelSerializer):
             "fyk",
             "classe_exposition",
         ]
+        list_serializer_class = PoteauListSerializer
 
     def validate(self, attrs):
         type_section = attrs.get("type_section")

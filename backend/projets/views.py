@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import QuerySet
 from rest_framework import viewsets
 from rest_framework.request import Request
@@ -85,3 +86,12 @@ class PoteauViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(niveau_id=niveau)
 
         return queryset.select_related("niveau__batiment__projet")
+
+    def get_serializer(self, *args, **kwargs):
+        if isinstance(kwargs.get("data"), list):
+            kwargs["many"] = True
+        return super().get_serializer(*args, **kwargs)
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            serializer.save()
