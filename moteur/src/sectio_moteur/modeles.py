@@ -96,9 +96,11 @@ class ResultatPoteau:
 class TypeFerraillage:
     """Un type de ferraillage proposé pour un groupe de poteaux physiques.
 
-    resultat : le ResultatPoteau retenu pour ce type (calculer() ou verifier()).
-    poteaux_couverts : les poteaux physiques auxquels ce ferraillage s'applique.
+    resultat : le ResultatPoteau retenu pour ce type.
+    poteau_representatif : le poteau qui a servi à produire ce résultat.
+    poteaux_couverts : tous les poteaux auxquels ce ferraillage s'applique.
     """
 
     resultat: ResultatPoteau
+    poteau_representatif: PoteauInput
     poteaux_couverts: list[PoteauInput]

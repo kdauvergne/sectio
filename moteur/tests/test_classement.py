@@ -35,3 +35,14 @@ def test_tous_les_poteaux_sont_couverts():
 
     references_couvertes = {p.reference for t in types for p in t.poteaux_couverts}
     assert references_couvertes == {"1", "2", "3"}
+
+
+def test_chaque_type_a_un_representatif():
+    poteaux = [poteau("1", 1209.0), poteau("2", 1209.0), poteau("3", 400.0)]
+
+    types, _ = proposer_types(poteaux, MethodeSimplifiee())
+
+    for type_ferraillage in types:
+        assert (
+            type_ferraillage.poteau_representatif in type_ferraillage.poteaux_couverts
+        )

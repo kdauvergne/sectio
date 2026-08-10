@@ -40,7 +40,11 @@ def proposer_types(
     succes, echecs = calculer_tous_les_poteaux(poteaux, methode)
     poteau_1, resultat_1 = max(succes, key=lambda couple: couple[1].As)
 
-    type_1 = TypeFerraillage(resultat=resultat_1, poteaux_couverts=[poteau_1])
+    type_1 = TypeFerraillage(
+        resultat=resultat_1,
+        poteau_representatif=poteau_1,
+        poteaux_couverts=[poteau_1],
+    )
 
     type_2_couples = [
         (p, r) for p, r in succes if r.as_min_gouverne and p is not poteau_1
@@ -49,7 +53,11 @@ def proposer_types(
     if type_2_couples:
         poteaux_type_2 = [p for p, r in type_2_couples]
         resultat_2 = type_2_couples[0][1]
-        type_2 = TypeFerraillage(resultat=resultat_2, poteaux_couverts=poteaux_type_2)
+        type_2 = TypeFerraillage(
+            resultat=resultat_2,
+            poteau_representatif=type_2_couples[0][0],
+            poteaux_couverts=poteaux_type_2,
+        )
     else:
         type_2 = None
 
@@ -61,7 +69,11 @@ def proposer_types(
         poteaux_type_3 = [p for p, r in restants]
         poteau_3, _ = max(restants, key=lambda couple: couple[1].As)
         resultat_3 = methode.verifier(as_candidat, poteau_3)
-        type_3 = TypeFerraillage(resultat=resultat_3, poteaux_couverts=poteaux_type_3)
+        type_3 = TypeFerraillage(
+            resultat=resultat_3,
+            poteau_representatif=poteau_3,
+            poteaux_couverts=poteaux_type_3,
+        )
     else:
         type_3 = None
 
