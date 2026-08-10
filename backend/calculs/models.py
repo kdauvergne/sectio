@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Calcul(models.Model):
-    """Jamais modifié : un nouveau choix crée un nouveau Calcul."""
+    """Jamais modifié : un nouveau choix crée un nouveau Calcul. Equivalent ResultatPoteau côté moteur."""
 
     type_poteau = models.ForeignKey(
         "projets.TypePoteau", on_delete=models.CASCADE, related_name="calculs"
@@ -59,6 +59,8 @@ class Calcul(models.Model):
     espacement_extremites = models.FloatField(
         "espacement extrémités (mm)", null=True, blank=True
     )
+
+    ferraillage_impossible = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = "calcul"
