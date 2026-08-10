@@ -10,6 +10,7 @@ from calculs.services import (
     MethodeNonApplicableException,
     SectioException,
     calculer_poteau,
+    calculer_niveau,
 )
 
 from .models import Batiment, Niveau, Poteau, Projet, TypePoteau
@@ -79,6 +80,27 @@ class NiveauViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(batiment_id=batiment)
 
         return queryset.select_related("batiment__projet").prefetch_related("poteaux")
+
+    @action(detail=True, methods=["post"])
+    def calculer(self, request, pk=None):
+        niveau = self.get_object()
+
+        try:
+            with transaction.atomic():
+                types, echecs = calculer_niveau(niveau, request.user)
+        except SectioException as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            {
+                "types": TypePoteauSerializer(types, many=True).data,
+                "echecs": [
+                    {"reference": entree.reference, "erreur": str(erreur)}
+                    for entree, erreur in echecs
+                ],
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class PoteauViewSet(viewsets.ModelViewSet):

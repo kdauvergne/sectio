@@ -95,17 +95,25 @@ class PoteauSerializer(serializers.ModelSerializer):
         ]
         list_serializer_class = PoteauListSerializer
 
+    def _valeur(self, attrs, champ):
+        """Valeur envoyée si présente, sinon celle déjà en base."""
+        if champ in attrs:
+            return attrs[champ]
+        if self.instance is not None:
+            return getattr(self.instance, champ)
+        return None
+
     def validate(self, attrs):
-        type_section = attrs.get("type_section")
+        type_section = self._valeur(attrs, "type_section")
 
         if type_section == Poteau.TypeSection.RECTANGULAIRE and (
-            attrs.get("b") is None or attrs.get("h") is None
+            self._valeur(attrs, "b") is None or self._valeur(attrs, "h") is None
         ):
             raise serializers.ValidationError("Une section rectangulaire exige b et h.")
 
         if (
             type_section == Poteau.TypeSection.CIRCULAIRE
-            and attrs.get("diametre") is None
+            and self._valeur(attrs, "diametre") is None
         ):
             raise serializers.ValidationError(
                 "Une section circulaire exige le diamètre."
