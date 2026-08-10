@@ -5,6 +5,10 @@ Aucun autre module du backend ne doit importer sectio_moteur.
 
 from importlib.metadata import version
 
+from sectio_moteur.exceptions import (  # noqa: F401
+    MethodeNonApplicableException,
+    SectioException,
+)
 from sectio_moteur.methode_simplifiee import MethodeSimplifiee
 from sectio_moteur.modeles import PoteauInput, ResultatPoteau
 
@@ -31,6 +35,7 @@ def poteau_vers_entree(poteau: Poteau) -> PoteauInput:
         taux_travail_min=poteau.taux_travail_min,
         duree_resistance_feu=poteau.duree_resistance_feu or None,
         expose_un_seul_cote=poteau.expose_un_seul_cote,
+        reference=str(poteau.pk),
     )
 
 

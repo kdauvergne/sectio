@@ -2,7 +2,7 @@ from collections import Counter
 
 from rest_framework import serializers
 
-from .models import Batiment, Niveau, Poteau, Projet
+from .models import Batiment, Niveau, Poteau, Projet, TypePoteau
 
 
 class ProjetSerializer(serializers.ModelSerializer):
@@ -123,6 +123,19 @@ class PoteauSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Type de poteau inconnu.")
 
         return type_poteau
+
+    def validate_niveau(self, niveau):
+        utilisateur = self.context["request"].user
+        if not niveau.batiment.projet.membres.filter(pk=utilisateur.pk).exists():
+            raise serializers.ValidationError("Niveau inconnu.")
+        return niveau
+
+
+class TypePoteauSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TypePoteau
+        fields = ["id", "niveau", "nom", "calcul_actuel"]  # noqa: RUF012
+        read_only_fields = ["calcul_actuel"]  # noqa: RUF012
 
     def validate_niveau(self, niveau):
         utilisateur = self.context["request"].user

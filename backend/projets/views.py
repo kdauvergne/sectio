@@ -1,9 +1,18 @@
 from django.db import transaction
 from django.db.models import QuerySet
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.request import Request
+from rest_framework.response import Response
 
-from .models import Batiment, Niveau, Poteau, Projet
+from calculs.serializers import CalculSerializer
+from calculs.services import (
+    MethodeNonApplicableException,
+    SectioException,
+    calculer_poteau,
+)
+
+from .models import Batiment, Niveau, Poteau, Projet, TypePoteau
 from .serializers import (
     BatimentDetailSerializer,
     BatimentSerializer,
@@ -12,6 +21,7 @@ from .serializers import (
     PoteauSerializer,
     ProjetDetailSerializer,
     ProjetSerializer,
+    TypePoteauSerializer,
 )
 
 
@@ -95,3 +105,50 @@ class PoteauViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         with transaction.atomic():
             serializer.save()
+
+    @action(detail=True, methods=["post"])
+    def calculer(self, request, pk=None):
+        poteau = self.get_object()
+
+        try:
+            with transaction.atomic():
+                type_poteau = poteau.type_poteau
+                if type_poteau is None:
+                    type_poteau = TypePoteau.objects.create(
+                        niveau=poteau.niveau, nom=poteau.repere
+                    )
+                    poteau.type_poteau = type_poteau
+                    poteau.save(update_fields=["type_poteau"])
+
+                calcul = calculer_poteau(poteau, type_poteau, request.user)
+                calcul.save()
+
+                type_poteau.calcul_actuel = calcul
+                type_poteau.save(update_fields=["calcul_actuel"])
+
+        except MethodeNonApplicableException as e:
+            return Response(
+                {"conditions_violees": e.conditions_violees},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except SectioException as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(CalculSerializer(calcul).data, status=status.HTTP_201_CREATED)
+
+
+class TypePoteauViewSet(viewsets.ModelViewSet):
+    """Types de poteaux des projets dont l'utilisateur est membre."""
+
+    serializer_class = TypePoteauSerializer
+
+    def get_queryset(self) -> QuerySet[TypePoteau]:  # type: ignore[override]
+        queryset = TypePoteau.objects.filter(
+            niveau__batiment__projet__membres=self.request.user
+        )
+
+        niveau = self.request.query_params.get("niveau")  # type: ignore[override]
+        if niveau:
+            queryset = queryset.filter(niveau_id=niveau)
+
+        return queryset.select_related("niveau__batiment__projet")
