@@ -41,8 +41,8 @@ jobs:
       - name: Lancer les tests
         working-directory: backend
         env:
-          SECRET_KEY: cle-de-test-sans-importance
-          DEBUG: "False"
+          DJANGO_SECRET_KEY: cle-de-test
+          DJANGO_DEBUG: "False"
           POSTGRES_DB: sectio
           POSTGRES_USER: sectio_user
           POSTGRES_PASSWORD: motdepasse
