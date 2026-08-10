@@ -291,3 +291,71 @@ def test_calcul_sur_poteau_etranger_renvoie_404(
     reponse = client.post(f"/api/poteaux/{poteau.pk}/calculer/")
 
     assert reponse.status_code == 404
+
+
+@pytest.mark.django_db
+def test_calcul_de_niveau_cree_des_types(client, utilisateur, niveau):
+    for repere in ["P1", "P2", "P3"]:
+        Poteau.objects.create(
+            niveau=niveau,
+            repere=repere,
+            type_section="rectangulaire",
+            b=0.30,
+            h=0.30,
+            L0=2.83,
+            d_prime=0.035,
+            G=1209.0 if repere != "P3" else 400.0,
+            Q=200.0,
+        )
+
+    client.force_login(utilisateur)
+    reponse = client.post(f"/api/niveaux/{niveau.pk}/calculer/")
+
+    assert reponse.status_code == 201
+    assert len(reponse.json()["types"]) >= 1
+
+
+@pytest.mark.django_db
+def test_tous_les_poteaux_recoivent_un_type(client, utilisateur, niveau):
+    for repere, charge in [("P1", 1209.0), ("P2", 1209.0), ("P3", 400.0)]:
+        Poteau.objects.create(
+            niveau=niveau,
+            repere=repere,
+            type_section="rectangulaire",
+            b=0.30,
+            h=0.30,
+            L0=2.83,
+            d_prime=0.035,
+            G=charge,
+            Q=200.0,
+        )
+
+    client.force_login(utilisateur)
+    client.post(f"/api/niveaux/{niveau.pk}/calculer/")
+
+    for poteau in Poteau.objects.filter(niveau=niveau):
+        assert poteau.type_poteau is not None
+
+
+@pytest.mark.django_db
+def test_patch_partiel_refuse_de_vider_une_dimension(client, utilisateur, niveau):
+    poteau = Poteau.objects.create(
+        niveau=niveau,
+        repere="P1",
+        type_section="rectangulaire",
+        b=0.30,
+        h=0.30,
+        L0=2.83,
+        d_prime=0.035,
+        G=1209.0,
+        Q=200.0,
+    )
+
+    client.force_login(utilisateur)
+    reponse = client.patch(
+        f"/api/poteaux/{poteau.pk}/",
+        {"b": None},
+        content_type="application/json",
+    )
+
+    assert reponse.status_code == 400
