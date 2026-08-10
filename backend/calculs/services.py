@@ -11,8 +11,9 @@ from sectio_moteur.exceptions import (  # noqa: F401
 )
 from sectio_moteur.methode_simplifiee import MethodeSimplifiee
 from sectio_moteur.modeles import PoteauInput, ResultatPoteau
+from sectio_moteur.classification.classement import proposer_types
 
-from projets.models import Poteau
+from projets.models import Niveau, Poteau, TypePoteau
 
 from .models import Calcul
 
@@ -114,3 +115,66 @@ def verifier_poteau(
     entree = poteau_vers_entree(poteau)
     resultat = MethodeSimplifiee().verifier(as_propose, entree)
     return resultat_vers_calcul(resultat, poteau, type_poteau, utilisateur)
+
+
+def grouper_par_section(poteaux: list[Poteau]) -> dict:
+    """Range les poteaux par section identique.
+
+    Retourne un dictionnaire : {(type, b, h, diametre): [poteaux]}
+    """
+    groupes: dict = {}
+
+    for poteau in poteaux:
+        cle = (poteau.type_section, poteau.b, poteau.h, poteau.diametre)
+        groupes.setdefault(cle, []).append(poteau)
+
+    return groupes
+
+
+def calculer_niveau(niveau: Niveau, utilisateur) -> tuple[list[TypePoteau], list]:
+    """Calcule tous les poteaux d'un niveau et crée les types de ferraillage.
+
+    Retourne (types_crees, echecs).
+    """
+    poteaux = list(Poteau.objects.filter(niveau=niveau))
+    par_reference = {str(p.pk): p for p in poteaux}
+
+    types_crees = []
+    echecs = []
+
+    for groupe in grouper_par_section(poteaux).values():
+        entrees = [poteau_vers_entree(p) for p in groupe]
+        types_proposes, echecs_groupe = proposer_types(entrees, MethodeSimplifiee())
+        echecs.extend(echecs_groupe)
+
+        for numero, type_propose in enumerate(types_proposes, start=1):
+            type_poteau = _enregistrer_type(
+                type_propose, numero, niveau, par_reference, utilisateur
+            )
+            types_crees.append(type_poteau)
+
+    return types_crees, echecs
+
+
+def _enregistrer_type(
+    type_propose, numero: int, niveau: Niveau, par_reference: dict, utilisateur
+) -> TypePoteau:
+    """Crée un TypePoteau, son Calcul, et y rattache les poteaux couverts."""
+    poteau_representatif = par_reference[type_propose.poteau_representatif.reference]
+
+    type_poteau = TypePoteau.objects.create(niveau=niveau, nom=f"Type {numero}")
+
+    calcul = resultat_vers_calcul(
+        type_propose.resultat, poteau_representatif, type_poteau, utilisateur
+    )
+    calcul.save()
+
+    type_poteau.calcul_actuel = calcul  # type: ignore[assignment]
+    type_poteau.save(update_fields=["calcul_actuel"])
+
+    for entree in type_propose.poteaux_couverts:
+        poteau = par_reference[entree.reference]
+        poteau.type_poteau = type_poteau
+        poteau.save(update_fields=["type_poteau"])
+
+    return type_poteau

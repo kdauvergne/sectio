@@ -67,6 +67,8 @@ class Calcul(models.Model):
         ordering = ["-date_calcul"]  # noqa: RUF012
 
     def __str__(self) -> str:
+        if self.date_calcul is None:
+            return f"Calcul (non enregistré) - {self.type_poteau}"
         return f"Calcul {self.pk} - {self.type_poteau} ({self.date_calcul:%d/%m/%Y})"
 
 
@@ -97,4 +99,6 @@ class Export(models.Model):
         ordering = ["-date_export"]  # noqa: RUF012
 
     def __str__(self) -> str:
+        if self.date_export is None:
+            return f"Export (non enregistré) - {self.intitule}"
         return f"Export {self.pk} - {self.intitule} ({self.date_export:%d/%m/%Y})"
