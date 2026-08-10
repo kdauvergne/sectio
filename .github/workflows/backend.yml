@@ -44,6 +44,10 @@ jobs:
         working-directory: backend
         run: poetry install
 
+      - name: Installer le moteur
+        working-directory: backend
+        run: poetry run pip install -e ../moteur
+
       - name: Lancer les tests
         working-directory: backend
         env:
