@@ -51,6 +51,9 @@ class PoteauInput:
     duree_resistance_feu: str | None = None
     expose_un_seul_cote: bool = False
 
+    # réference unique d'un poteau pour les distinguer
+    reference: str | None = None
+
 
 @dataclass(frozen=True)
 class ResultatPoteau:
