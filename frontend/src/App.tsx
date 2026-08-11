@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { CarteProjet } from "@/components/projets/CarteProjet";
 import { PROJETS_DEMO } from "@/donnees-demo";
+import { POTEAUX_DEMO } from "@/donnees-demo";
 import { BarreRecherche } from "./components/projets/BarreRecherche";
+import { TableauPoteaux } from "./components/poteaux/TableauPoteaux";
 
 function App() {
   const [recherche, setRecherche] = useState("");
@@ -24,6 +26,8 @@ function App() {
           Aucun projet ne correspond à « {recherche} ».
         </p>
       )}
+      <h2 className="text-xl font-semibold mt-10 mb-4">Poteaux du niveau</h2>
+      <TableauPoteaux poteaux={POTEAUX_DEMO} />
     </div>
   );
 }

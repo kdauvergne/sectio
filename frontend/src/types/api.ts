@@ -9,3 +9,25 @@ export type Projet = {
   fyk: number;
   classe_exposition: string;
 };
+
+/** Forme d'un poteau renvoyé par l'API Django (PoteauSerializer). */
+export type Poteau = {
+  id: number;
+  niveau: number;
+  type_poteau: number | null;
+  repere: string;
+  type_section: "rectangulaire" | "circulaire";
+  b: number | null;
+  h: number | null;
+  diametre: number | null;
+  L0: number;
+  d_prime: number;
+  G: number;
+  Q: number;
+  taux_travail_min: number;
+  duree_resistance_feu: string;
+  expose_un_seul_cote: boolean;
+  fck: number;
+  fyk: number;
+  classe_exposition: string;
+};
