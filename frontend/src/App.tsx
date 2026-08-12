@@ -17,9 +17,11 @@ function App() {
     <AppLayout>
       <div className="grid gap-4 max-w-2xl mx-5 ">
         <h1 className="text-2xl font-semibold mb-6">Tableau de bord</h1>
-        <div className="mb-6">
-          <BarreRecherche valeur={recherche} onChangement={setRecherche} />
-        </div>
+      </div>
+      <div className="mb-6">
+        <BarreRecherche valeur={recherche} onChangement={setRecherche} />
+      </div>
+      <div className="grid grid-cols-3 gap-4 xl:grid-cols-5">
         {projetFiltres.map((projet) => (
           <CarteProjet key={projet.id} projet={projet} />
         ))}
@@ -28,9 +30,9 @@ function App() {
             Aucun projet ne correspond à « {recherche} ».
           </p>
         )}
-        <h2 className="text-xl font-semibold mt-10 mb-4">Poteaux du niveau</h2>
-        <TableauPoteaux poteaux={POTEAUX_DEMO} />
       </div>
+      <h2 className="text-xl font-semibold mt-10 mb-4">Poteaux du niveau</h2>
+      <TableauPoteaux poteaux={POTEAUX_DEMO} />
     </AppLayout>
   );
 }
