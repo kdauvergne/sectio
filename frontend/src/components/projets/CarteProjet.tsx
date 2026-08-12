@@ -26,9 +26,7 @@ export function CarteProjet({ projet }: CarteProjetProps) {
     <Card>
       <CardHeader>
         <CardTitle>{projet.nom}</CardTitle>
-        {projet.description && (
-          <CardDescription>{projet.description}</CardDescription>
-        )}{" "}
+        <CardDescription>{projet.description}</CardDescription>
       </CardHeader>
       <CardContent className="flex gap-2">
         <Badge variant="secondary">{classeResistance(projet.fck)}</Badge>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
-
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/jetbrains-mono";
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -27,11 +28,11 @@
   --chart-3: oklch(0.5673 0.1563 47.2384);
   --chart-4: oklch(0.491 0.1442 43.4774);
   --chart-5: oklch(0.432 0.1284 42.8029);
-  --sidebar: oklch(1 0 0);
+  --sidebar: oklch(0.9834 0.0042 236.4956);
   --sidebar-foreground: oklch(0.2739 0.1224 265.5769);
   --sidebar-primary: oklch(0.7459 0.18 56.5983);
   --sidebar-primary-foreground: oklch(0.2739 0.1224 265.5769);
-  --sidebar-accent: oklch(0.9834 0.0042 236.4956);
+  --sidebar-accent: oklch(0.9484 0.0074 236.4956);
   --sidebar-accent-foreground: oklch(0.2739 0.1224 265.5769);
   --sidebar-border: oklch(0.9262 0.0109 256.6971);
   --sidebar-ring: oklch(0.7857 0.1716 68.572);
@@ -96,8 +97,8 @@
   --sidebar-foreground: oklch(0.9219 0 0);
   --sidebar-primary: oklch(0.7857 0.1716 68.572);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.491 0.1442 43.4774);
-  --sidebar-accent-foreground: oklch(0.9277 0.1183 95.5956);
+  --sidebar-accent: oklch(0.2686 0 0);
+  --sidebar-accent-foreground: oklch(0.9219 0 0);
   --sidebar-border: oklch(0.3715 0 0);
   --sidebar-ring: oklch(0.7857 0.1716 68.572);
   --font-sans: Geist, ui-sans-serif, sans-serif, system-ui;
