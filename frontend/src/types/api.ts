@@ -31,3 +31,11 @@ export type Poteau = {
   fyk: number;
   classe_exposition: string;
 };
+
+/** Enveloppe de pagination renvoyée par DjangoRestFramework */
+export type Response<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};

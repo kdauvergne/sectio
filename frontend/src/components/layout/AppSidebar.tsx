@@ -1,15 +1,16 @@
 import { useState } from "react";
-
+import { Link } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
 import {
-  LayoutDashboard,
-  FolderKanban,
   Building2,
   ChevronsUpDown,
+  FolderKanban,
+  LayoutDashboard,
   LogOut,
   Settings,
   UserCircle,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -35,9 +36,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useIsMobile } from "@/hooks/use-mobile";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type LienNavigation = {
   titre: string;
@@ -45,7 +45,7 @@ type LienNavigation = {
   icone: LucideIcon;
 };
 
-type Utilisateurs = {
+type Utilisateur = {
   nom: string;
   prenom: string;
   titre: string;
@@ -53,11 +53,19 @@ type Utilisateurs = {
 };
 
 const NAVIGATION: LienNavigation[] = [
-  { titre: "Tableau de bord", url: "/", icone: LayoutDashboard },
-  { titre: "Projets", url: "/projets", icone: FolderKanban },
+  {
+    titre: "Tableau de bord",
+    url: "/",
+    icone: LayoutDashboard,
+  },
+  {
+    titre: "Projets",
+    url: "/projets",
+    icone: FolderKanban,
+  },
 ];
 
-const user: Utilisateurs = {
+const user: Utilisateur = {
   nom: "Dubois",
   prenom: "Philippe",
   titre: "Ingénieur structure",
@@ -66,7 +74,6 @@ const user: Utilisateurs = {
 
 export function AppSidebar() {
   const isMobile = useIsMobile();
-
   const [projetsOuvert, setProjetsOuvert] = useState(false);
 
   return (
@@ -75,64 +82,66 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/">
+              <Link to="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Building2 className="size-4" />
                 </div>
+
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-bold">Sectio</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <div className="mx-2 h-px bg-sidebar-border" />
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {NAVIGATION.map((lien) => {
                 const estProjets = lien.titre === "Projets";
+                const Icone = lien.icone;
 
                 return (
                   <SidebarMenuItem key={lien.url}>
                     {estProjets ? (
-                      // Pas de asChild ici : SidebarMenuButton reste un <button> natif,
-                      // donc pas de href, pas de navigation → seul le toggle s'exécute.
                       <SidebarMenuButton
                         tooltip={lien.titre}
                         onClick={() => setProjetsOuvert((ouvert) => !ouvert)}
                       >
-                        <lien.icone />
+                        <Icone />
                         <span>{lien.titre}</span>
                       </SidebarMenuButton>
                     ) : (
                       <SidebarMenuButton asChild tooltip={lien.titre}>
-                        <a href={lien.url}>
-                          <lien.icone />
+                        <Link to={lien.url}>
+                          <Icone />
                           <span>{lien.titre}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     )}
 
                     {estProjets && projetsOuvert && (
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton isActive={false}>
-                            Projet Alpha
+                          <SidebarMenuSubButton asChild>
+                            <Link to="/projets/alpha">Projet Alpha</Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
 
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton isActive={false}>
-                            Projet Beta
+                          <SidebarMenuSubButton asChild>
+                            <Link to="/projets/beta">Projet Beta</Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
 
                         <SidebarMenuSubItem>
-                          <SidebarMenuSubButton isActive={false}>
-                            Projet Gamma
+                          <SidebarMenuSubButton asChild>
+                            <Link to="/projets/gamma">Projet Gamma</Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       </SidebarMenuSub>
@@ -144,32 +153,36 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      {/* Bloc footer Sidebar utilisateur */}
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground md:h-8 md:p-0"
+                  className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
                   size="lg"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
-                      src="https://github.com/shadcn.png"
-                      alt="@shadcn"
+                      src={user.avatar}
+                      alt={`${user.prenom} ${user.nom}`}
                     />
-                    <AvatarFallback>DP</AvatarFallback>
+                    <AvatarFallback>PD</AvatarFallback>
                   </Avatar>
+
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">
                       {user.prenom} {user.nom}
                     </span>
+
                     <span className="truncate text-xs">{user.titre}</span>
                   </div>
+
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent
                 align="end"
                 className="w-(--anchor-width) min-w-45 rounded-lg p-2"
@@ -177,16 +190,21 @@ export function AppSidebar() {
                 sideOffset={8}
               >
                 <DropdownMenuLabel className="font-normal">
-                  <div className="flex items-left gap-2 px-1 py-1.5 text-left text-sm">
+                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src={user.avatar} />
-                      <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                      <AvatarImage
+                        src={user.avatar}
+                        alt={`${user.prenom} ${user.nom}`}
+                      />
+                      <AvatarFallback className="rounded-lg">PD</AvatarFallback>
                     </Avatar>
+
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-medium">
-                        {user.nom} {user.prenom}
+                        {user.prenom} {user.nom}
                       </span>
-                      <span className="truncate text-xs">{user.titre} </span>
+
+                      <span className="truncate text-xs">{user.titre}</span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
@@ -196,12 +214,15 @@ export function AppSidebar() {
                     <UserCircle />
                     Compte
                   </DropdownMenuItem>
+
                   <DropdownMenuItem>
                     <Settings />
                     Paramètres
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
+
                 <DropdownMenuSeparator />
+
                 <DropdownMenuItem variant="destructive">
                   <LogOut />
                   Se déconnecter
