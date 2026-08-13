@@ -86,7 +86,7 @@ def test_detail_projet_etranger_renvoie_404(client, utilisateur, autre_utilisate
 
 
 @pytest.mark.django_db
-def test_obtention_jeton(client, utilisateur):
+def test_connexion_cree_cookies(client, utilisateur):
     reponse = client.post(
         "/api/token/",
         {"email": "pierre@exemple.fr", "password": "motdepasse"},
@@ -94,45 +94,34 @@ def test_obtention_jeton(client, utilisateur):
     )
 
     assert reponse.status_code == 200
-    assert "access" in reponse.json()
-    assert "refresh" in reponse.json()
+    assert reponse.json() == {}  # plus aucun jeton lisible
+    assert "sectio_access" in reponse.cookies
+    assert reponse.cookies["sectio_access"]["httponly"]
+    assert reponse.cookies["sectio_refresh"]["httponly"]
 
 
 @pytest.mark.django_db
-def test_acces_avec_jeton(client, utilisateur):
-    jeton = client.post(
+def test_acces_avec_cookie(client, utilisateur):
+    client.post(
         "/api/token/",
         {"email": "pierre@exemple.fr", "password": "motdepasse"},
         content_type="application/json",
-    ).json()["access"]
-
-    reponse = client.get(
-        "/api/projets/",
-        headers={"Authorization": f"Bearer {jeton}"},
     )
 
+    reponse = client.get("/api/projets/")
     assert reponse.status_code == 200
 
 
 @pytest.mark.django_db
-def test_deconnexion_invalide_le_refresh(client, utilisateur):
-    jetons = client.post(
+def test_deconnexion_efface_les_cookies(client, utilisateur):
+    client.post(
         "/api/token/",
         {"email": "pierre@exemple.fr", "password": "motdepasse"},
         content_type="application/json",
-    ).json()
-
-    deconnexion = client.post(
-        "/api/token/blacklist/",
-        {"refresh": jetons["refresh"]},
-        content_type="application/json",
     )
-    assert deconnexion.status_code == 200
 
-    # Le refresh mis en liste noire ne doit plus rien produire
-    renouvellement = client.post(
-        "/api/token/refresh/",
-        {"refresh": jetons["refresh"]},
-        content_type="application/json",
-    )
-    assert renouvellement.status_code == 401
+    deconnexion = client.post("/api/deconnexion/")
+    assert deconnexion.status_code == 204
+    assert client.cookies["sectio_access"].value == ""
+
+    assert client.get("/api/projets/").status_code == 401
