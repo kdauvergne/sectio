@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
   ChevronsUpDown,
@@ -74,7 +73,8 @@ const user: Utilisateur = {
 
 export function AppSidebar() {
   const isMobile = useIsMobile();
-  const [projetsOuvert, setProjetsOuvert] = useState(false);
+  const { pathname } = useLocation();
+  const projetsOuvert = pathname.startsWith("/projets");
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -108,22 +108,12 @@ export function AppSidebar() {
 
                 return (
                   <SidebarMenuItem key={lien.url}>
-                    {estProjets ? (
-                      <SidebarMenuButton
-                        tooltip={lien.titre}
-                        onClick={() => setProjetsOuvert((ouvert) => !ouvert)}
-                      >
+                    <SidebarMenuButton tooltip={lien.titre} asChild>
+                      <Link to={lien.url}>
                         <Icone />
                         <span>{lien.titre}</span>
-                      </SidebarMenuButton>
-                    ) : (
-                      <SidebarMenuButton asChild tooltip={lien.titre}>
-                        <Link to={lien.url}>
-                          <Icone />
-                          <span>{lien.titre}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    )}
+                      </Link>
+                    </SidebarMenuButton>
 
                     {estProjets && projetsOuvert && (
                       <SidebarMenuSub>

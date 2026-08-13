@@ -11,6 +11,8 @@ function App() {
 
       <Route element={<AppLayout />}>
         <Route path="/" element={<TableauDeBord />} />
+        <Route path="/projets" element={<div>Projets</div>} />
+        <Route path="/projets/:id" element={<div>Détail projet</div>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
