@@ -39,3 +39,11 @@ export type Response<T> = {
   previous: string | null;
   results: T[];
 };
+
+/** Utilisateur connecté, renvoyé par GET /api/me/. */
+export type Utilisateur = {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+};

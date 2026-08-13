@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { TableauDeBord } from "@/pages/TableauDeBord";
-import { Connexion } from "./pages/Connexion";
+import { Connexion } from "@/pages/Connexion";
 
 function App() {
   return (

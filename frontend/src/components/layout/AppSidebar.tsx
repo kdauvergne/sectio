@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
-  Building2,
   ChevronsUpDown,
   FolderKanban,
   LayoutDashboard,
   LogOut,
   Settings,
+  Sigma,
   UserCircle,
 } from "lucide-react";
 
@@ -83,8 +83,8 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Building2 className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-secondary text-sidebar-primary-foreground">
+                  <Sigma className="size-4 text-amber-600" />
                 </div>
 
                 <div className="grid flex-1 text-left text-sm leading-tight">
