@@ -153,7 +153,7 @@ MAILERS = {
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "comptes.authentication.JWTAuthenticationCookie",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -172,3 +172,8 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
 }
+
+JWT_COOKIE_ACCESS = "sectio_access"
+JWT_COOKIE_REFRESH = "sectio_refresh"
+JWT_COOKIE_SAMESITE = "Lax"
+JWT_COOKIE_SECURE = os.getenv("JWT_COOKIE_SECURE", "False") == "True"
