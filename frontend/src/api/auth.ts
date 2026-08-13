@@ -1,37 +1,25 @@
-import axios from "axios";
-import { api, API_URL } from "@/lib/api";
-import { deleteTokens, saveTokens, getRefreshToken } from "@/lib/tokens";
+import { api, publicApi } from "@/lib/api";
 import type { Utilisateur } from "@/types/api";
 
-/* POST /api/token/ identifiants vs tokens */
-
+/** POST /api/token/ */
 export async function connexion(
   email: string,
-  password: string,
+  motDePasse: string,
 ): Promise<void> {
-  const response = await axios.post(`${API_URL}/token/`, {
-    email,
-    password: password,
-  });
-  saveTokens(response.data.access, response.data.refresh);
+  await publicApi.post("/token/", { email, password: motDePasse });
 }
 
-/* GET /api/me/ fiche utilisateur connecté */
-
-export async function recupererProfilUtilisateur(): Promise<Utilisateur> {
-  const response = await api.get<Utilisateur>("/me/");
-  return response.data;
+/** GET /api/me/ */
+export async function recupererMonCompte(): Promise<Utilisateur> {
+  const reponse = await api.get<Utilisateur>("/moi/");
+  return reponse.data;
 }
 
-/* POST /api/token/blacklist/ invalide le refresh et clear le navigateur */
+/** POST /api/deconnexion/ */
 export async function deconnexion(): Promise<void> {
-  const refreshToken = getRefreshToken();
-  if (refreshToken) {
-    try {
-      await api.post("/token/blacklist/", { refresh: refreshToken });
-    } catch {
-      // Serveur injoignable ou refresh invalide
-    }
+  try {
+    await publicApi.post("/deconnexion/");
+  } catch {
+    // continue
   }
-  deleteTokens();
 }
