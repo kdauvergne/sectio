@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .cookies import definir_tokens, supprimer_tokens
-from .serializers import InscriptionSerializer
+from .serializers import InscriptionSerializer, MonCompteSerializer
 
 
 class InscriptionView(generics.CreateAPIView):
@@ -61,3 +61,12 @@ class DeconnexionView(APIView):
             except TokenError:
                 pass
         return supprimer_tokens(Response(status=status.HTTP_204_NO_CONTENT))
+
+
+class MonCompteView(generics.RetrieveAPIView):
+    """GET /api/me renvoie l'utilisateur correspondant au cookie identifié"""
+
+    serializer_class = MonCompteSerializer
+
+    def get_object(self):  # pyright: ignore[reportIncompatibleMethodOverride]
+        return self.request.user

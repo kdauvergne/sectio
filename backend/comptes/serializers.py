@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
+from .models import Utilisateur
+
 
 class InscriptionSerializer(serializers.ModelSerializer):
     """Création d'un compte utilisateur."""
@@ -14,3 +16,12 @@ class InscriptionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return get_user_model().objects.create_user(**validated_data)
+
+
+class MonCompteSerializer(serializers.ModelSerializer):
+    """Fiche de l'utilisateur connecté"""
+
+    class Meta:
+        model = Utilisateur
+        fields = ["id", "email", "first_name", "last_name"]  # noqa: RUF012
+        read_only_fields = fields
