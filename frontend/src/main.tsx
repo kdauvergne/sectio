@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import App from "./App";
 import "./index.css";
+import { ProviderAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -13,9 +14,11 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <App />
-        </TooltipProvider>
+        <ProviderAuth>
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
+        </ProviderAuth>
       </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>,

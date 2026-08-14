@@ -11,7 +11,7 @@ export async function connexion(
 
 /** GET /api/me/ */
 export async function recupererMonCompte(): Promise<Utilisateur> {
-  const reponse = await api.get<Utilisateur>("/moi/");
+  const reponse = await api.get<Utilisateur>("/me/");
   return reponse.data;
 }
 
