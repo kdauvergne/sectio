@@ -1,4 +1,3 @@
-import { Link, useLocation } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
   ChevronsUpDown,
@@ -9,6 +8,7 @@ import {
   Sigma,
   UserCircle,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   Sidebar,
@@ -37,6 +37,8 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 type LienNavigation = {
   titre: string;
@@ -75,6 +77,7 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
   const projetsOuvert = pathname.startsWith("/projets");
+  const { utilisateur, seDeconnecter } = useAuth();
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -156,14 +159,14 @@ export function AppSidebar() {
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
                       src={user.avatar}
-                      alt={`${user.prenom} ${user.nom}`}
+                      alt={`{$utilisateur?.first_name} {utilisateur?.last_name}`}
                     />
                     <AvatarFallback>PD</AvatarFallback>
                   </Avatar>
 
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">
-                      {user.prenom} {user.nom}
+                      {utilisateur?.first_name} {utilisateur?.last_name}
                     </span>
 
                     <span className="truncate text-xs">{user.titre}</span>
@@ -191,10 +194,8 @@ export function AppSidebar() {
 
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-medium">
-                        {user.prenom} {user.nom}
+                        {utilisateur?.first_name} {utilisateur?.last_name}
                       </span>
-
-                      <span className="truncate text-xs">{user.titre}</span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
@@ -213,7 +214,10 @@ export function AppSidebar() {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem
+                  onClick={() => seDeconnecter()}
+                  variant="destructive"
+                >
                   <LogOut />
                   Se déconnecter
                 </DropdownMenuItem>

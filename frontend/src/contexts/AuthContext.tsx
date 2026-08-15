@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { connexion, deconnexion, recupererMonCompte } from "@/api/auth";
 import type { Utilisateur } from "@/types/api";
+import { useNavigate } from "react-router";
+import { setOnSessionExpired } from "@/lib/api";
 
 type ValeurContexteAuth = {
   utilisateur: Utilisateur | null;
@@ -15,6 +17,7 @@ const ContexteAuth = createContext<ValeurContexteAuth | null>(null);
 export function ProviderAuth({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
   const [chargementInitial, setChargementInitial] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     recupererMonCompte()
@@ -22,6 +25,13 @@ export function ProviderAuth({ children }: { children: ReactNode }) {
       .catch(() => setUtilisateur(null))
       .finally(() => setChargementInitial(false));
   }, []);
+
+  useEffect(() => {
+    setOnSessionExpired(() => {
+      setUtilisateur(null);
+      navigate("/connexion", { replace: true });
+    });
+  }, [navigate]);
 
   async function seConnecter(email: string, password: string) {
     await connexion(email, password);

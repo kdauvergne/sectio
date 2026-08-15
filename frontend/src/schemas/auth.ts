@@ -6,3 +6,9 @@ export const schemaConnexion = z.object({
 });
 
 export type SaisieConnexion = z.infer<typeof schemaConnexion>;
+
+export const schemaResetPwd = z.object({
+  email: z.email("Adresse e-mail invalide."),
+});
+
+export type SaisieResetPwd = z.infer<typeof schemaResetPwd>;
