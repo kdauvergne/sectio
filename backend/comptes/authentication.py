@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.middleware.csrf import CsrfViewMiddleware
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework import exceptions
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -30,3 +31,17 @@ class JWTAuthenticationCookie(JWTAuthentication):
         raison = verificateur.process_view(request, None, (), {})
         if raison:
             raise exceptions.PermissionDenied(f"Contrôle CSRF a échoué : {raison}")
+
+
+class JWTAuthenticationCookieScheme(OpenApiAuthenticationExtension):
+    """Décrit JWTAuthenticationCookie à drf-spectacular (documentation OpenAPI)"""
+
+    target_class = JWTAuthenticationCookie
+    name = "cookieAuth"
+
+    def get_security_definition(self, auto_schema):
+        return {
+            "type": "apiKey",
+            "in": "cookie",
+            "name": settings.JWT_COOKIE_ACCESS,
+        }
