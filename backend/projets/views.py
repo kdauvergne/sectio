@@ -9,8 +9,8 @@ from calculs.serializers import CalculSerializer
 from calculs.services import (
     MethodeNonApplicableException,
     SectioException,
-    calculer_poteau,
     calculer_niveau,
+    calculer_poteau,
 )
 
 from .models import Batiment, Niveau, Poteau, Projet, TypePoteau

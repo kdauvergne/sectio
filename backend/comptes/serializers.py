@@ -25,3 +25,7 @@ class MonCompteSerializer(serializers.ModelSerializer):
         model = Utilisateur
         fields = ["id", "email", "first_name", "last_name"]  # noqa: RUF012
         read_only_fields = fields
+
+
+class DemandeResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()

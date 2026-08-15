@@ -1,6 +1,12 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.utils.decorators import method_decorator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,7 +15,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .cookies import definir_tokens, supprimer_tokens
-from .serializers import InscriptionSerializer, MonCompteSerializer
+from .serializers import (
+    DemandeResetPasswordSerializer,
+    InscriptionSerializer,
+    MonCompteSerializer,
+)
 
 
 class InscriptionView(generics.CreateAPIView):
@@ -70,3 +80,28 @@ class MonCompteView(generics.RetrieveAPIView):
 
     def get_object(self):  # pyright: ignore[reportIncompatibleMethodOverride]
         return self.request.user
+
+
+class DemandeResetPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]  # noqa: RUF012
+
+    @extend_schema(request=DemandeResetPasswordSerializer, responses={200: None})
+    def post(self, request):
+        serialiseur = DemandeResetPasswordSerializer(data=request.data)
+        serialiseur.is_valid(raise_exception=True)
+        email = serialiseur.validated_data["email"]  # type: ignore[index]
+
+        utilisateur = get_user_model().objects.filter(email__iexact=email).first()
+        if utilisateur:
+            uid = urlsafe_base64_encode(force_bytes(utilisateur.pk))
+            token = default_token_generator.make_token(utilisateur)
+            lien = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
+
+            send_mail(
+                subject="Réinitialisation de votre mot de passe Sectio",
+                message=f"Cliquez sur ce lien pour réinitialiser votre mot de passe : {lien}",
+                from_email=None,
+                recipient_list=[email],
+            )
+
+        return Response(status=status.HTTP_200_OK)
