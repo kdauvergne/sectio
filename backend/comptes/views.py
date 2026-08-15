@@ -19,6 +19,7 @@ from .serializers import (
     DemandeResetPasswordSerializer,
     InscriptionSerializer,
     MonCompteSerializer,
+    ResetPasswordSerializer,
 )
 
 
@@ -103,5 +104,17 @@ class DemandeResetPasswordView(APIView):
                 from_email=None,
                 recipient_list=[email],
             )
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]  # noqa: RUF012
+
+    @extend_schema(request=ResetPasswordSerializer, responses={200: None})
+    def post(self, request):
+        serialiseur = ResetPasswordSerializer(data=request.data)
+        serialiseur.is_valid(raise_exception=True)
+        serialiseur.save()
 
         return Response(status=status.HTTP_200_OK)
