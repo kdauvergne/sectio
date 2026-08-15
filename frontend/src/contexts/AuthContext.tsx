@@ -12,6 +12,8 @@ type ValeurContexteAuth = {
   seDeconnecter: () => Promise<void>;
 };
 
+const ROUTES_PUBLIQUES = ["/connexion", "/reset-password"];
+
 const ContexteAuth = createContext<ValeurContexteAuth | null>(null);
 
 export function ProviderAuth({ children }: { children: ReactNode }) {
@@ -29,7 +31,9 @@ export function ProviderAuth({ children }: { children: ReactNode }) {
   useEffect(() => {
     setOnSessionExpired(() => {
       setUtilisateur(null);
-      navigate("/connexion", { replace: true });
+      if (!ROUTES_PUBLIQUES.includes(window.location.pathname)) {
+        navigate("/connexion", { replace: true });
+      }
     });
   }, [navigate]);
 
