@@ -6,8 +6,9 @@ import { MotDePasseOublie } from "@/pages/MotDePasseOublie";
 
 import { TableauDeBord } from "@/pages/TableauDeBord";
 import { Route, Routes } from "react-router-dom";
-import { RouteProtegee } from "./components/RouteProtegee";
-import { Inscription } from "./pages/Inscription";
+import { RouteProtegee } from "@/components/RouteProtegee";
+import { Inscription } from "@/pages/Inscription";
+import { SaisieNiveau } from "./pages/SaisieNiveau";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/" element={<TableauDeBord />} />
           <Route path="/projets" element={<div>Projets</div>} />
           <Route path="/projets/:id" element={<div>Détail projet</div>} />
+          <Route path="/niveaux/:niveauId" element={<SaisieNiveau />} />
         </Route>
       </Route>
 

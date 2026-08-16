@@ -8,13 +8,26 @@ export const schemaPoteau = z
       .min(1, "Le repère est obligatoire")
       .max(8, "8 caractères maximum"),
     type_section: z.enum(["rectangulaire", "circulaire"]),
-    b: z.number().positive("Doit être positif").nullable(),
-    h: z.number().positive("Doit être positif").nullable(),
-    diametre: z.number().positive("Doit être positif").nullable(),
-    L0: z.number().positive("Doit être positif"),
-    d_prime: z.number().positive("Doit être positif"),
-    G: z.number().nonnegative("Ne peut pas être négatif"),
-    Q: z.number().nonnegative("Ne peut pas être négatif"),
+    b: z
+      .number({ error: "Obligatoire" })
+      .positive("Doit être positif")
+      .nullable(),
+    h: z
+      .number({ error: "Obligatoire" })
+      .positive("Doit être positif")
+      .nullable(),
+    diametre: z
+      .number({ error: "Obligatoire" })
+      .positive("Doit être positif")
+      .nullable(),
+    L0: z.number({ error: "Obligatoire" }).positive("Doit être positif"),
+    d_prime: z.number({ error: "Obligatoire" }).positive("Doit être positif"),
+    G: z
+      .number({ error: "Obligatoire" })
+      .nonnegative("Ne peut pas être négatif"),
+    Q: z
+      .number({ error: "Obligatoire" })
+      .nonnegative("Ne peut pas être négatif"),
   })
   .superRefine((valeurs, ctx) => {
     if (valeurs.type_section === "rectangulaire") {

@@ -54,3 +54,17 @@ export type NouvelUtilisateur = {
   last_name: string;
   password: string;
 };
+
+/** POST /api/poteaux/ (création en lot) */
+export type NouveauPoteau = {
+  niveau: number;
+  repere: string;
+  type_section: "rectangulaire" | "circulaire";
+  b: number | null;
+  h: number | null;
+  diametre: number | null;
+  L0: number;
+  d_prime: number;
+  G: number;
+  Q: number;
+};
