@@ -67,7 +67,14 @@ export function ReinitialiserMotDePasse() {
   });
 
   if (!uid || !token) {
-    return <p>Ce lien de réinitialisation est incomplet ou invalide.</p>;
+    return (
+      <Alert className="bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-300">
+        Ce lien de réinitialisation est incomplet ou invalide.
+        <Link to="/connexion" className="font-medium underline">
+          Redemandez un lien.
+        </Link>
+      </Alert>
+    );
   }
 
   return (
@@ -104,7 +111,6 @@ export function ReinitialiserMotDePasse() {
                   formResetPwd.handleSubmit();
                 }}
               >
-                {" "}
                 <FieldGroup>
                   <formResetPwd.Field
                     name="new_password"
