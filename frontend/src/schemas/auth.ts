@@ -26,3 +26,16 @@ export const schemaNouveauMotDePasse = z
     message: "Les mots de passe doivent être identiques",
     path: ["confirmPassword"],
   });
+
+export const schemaInscription = z
+  .object({
+    nom: z.string().min(1, "Le nom est obligatoire."),
+    prenom: z.string().min(1, "Le prénom est obligatoire."),
+    email: z.email("Une adresse e-mail valide est obligatoire."),
+    password: schemaMotDePasse,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe doivent être identiques",
+    path: ["confirmPassword"],
+  });

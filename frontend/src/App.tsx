@@ -7,6 +7,7 @@ import { MotDePasseOublie } from "@/pages/MotDePasseOublie";
 import { TableauDeBord } from "@/pages/TableauDeBord";
 import { Route, Routes } from "react-router-dom";
 import { RouteProtegee } from "./components/RouteProtegee";
+import { Inscription } from "./pages/Inscription";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Route element={<AuthLayout />}>
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+        <Route path="/inscription" element={<Inscription />} />
       </Route>
 
       <Route path="/reset-password" element={<ReinitialiserMotDePasse />} />

@@ -1,5 +1,5 @@
 import { api, publicApi } from "@/lib/api";
-import type { Utilisateur } from "@/types/api";
+import type { Utilisateur, NouvelUtilisateur } from "@/types/api";
 
 /** POST /api/token/ */
 export async function connexion(
@@ -22,6 +22,14 @@ export async function deconnexion(): Promise<void> {
   } catch {
     // continue
   }
+}
+
+/** POST /api/inscription/ */
+export async function inscription(
+  donnees: NouvelUtilisateur,
+): Promise<Utilisateur> {
+  const reponse = await publicApi.post<Utilisateur>("/inscription/", donnees);
+  return reponse.data;
 }
 
 /** POST /api/mot-de-passe-oublie/ */

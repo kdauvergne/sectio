@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -11,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { schemaConnexion } from "@/schemas/auth";
 import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export function Connexion() {
   const { seConnecter } = useAuth();
@@ -126,6 +127,10 @@ export function Connexion() {
               </Button>
             )}
           />
+
+          <FieldDescription className="text-center">
+            Pas encore de compte ? <Link to="/inscription">Inscrivez-vous</Link>
+          </FieldDescription>
         </FieldGroup>
       </form>
     </div>

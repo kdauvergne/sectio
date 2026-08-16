@@ -47,3 +47,10 @@ export type Utilisateur = {
   first_name: string;
   last_name: string;
 };
+
+export type NouvelUtilisateur = {
+  email: string;
+  first_name: string;
+  last_name: string;
+  password: string;
+};

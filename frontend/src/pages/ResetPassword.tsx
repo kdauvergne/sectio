@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,10 +31,10 @@ export function ReinitialiserMotDePasse() {
   const uid = searchParams.get("uid");
   const token = searchParams.get("token");
 
-  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
-    React.useState(false);
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
+    useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [erreurServeur, setErreurServeur] = useState<string | null>(null);
 
   const togglePasswordVisibility = () => {
@@ -112,9 +111,8 @@ export function ReinitialiserMotDePasse() {
                 }}
               >
                 <FieldGroup>
-                  <formResetPwd.Field
-                    name="new_password"
-                    children={(field) => {
+                  <formResetPwd.Field name="new_password">
+                    {(field) => {
                       const estInvalide =
                         field.state.meta.isTouched && !field.state.meta.isValid;
                       return (
@@ -159,10 +157,9 @@ export function ReinitialiserMotDePasse() {
                         </Field>
                       );
                     }}
-                  />
-                  <formResetPwd.Field
-                    name="confirmPassword"
-                    children={(field) => {
+                  </formResetPwd.Field>
+                  <formResetPwd.Field name="confirmPassword">
+                    {(field) => {
                       const estInvalide =
                         field.state.meta.isTouched && !field.state.meta.isValid;
                       return (
@@ -209,7 +206,7 @@ export function ReinitialiserMotDePasse() {
                         </Field>
                       );
                     }}
-                  />
+                  </formResetPwd.Field>
                 </FieldGroup>
                 {erreurServeur && (
                   <p role="alert" className="text-destructive text-sm">
