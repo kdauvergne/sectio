@@ -182,4 +182,4 @@ JWT_COOKIE_SAMESITE = "Lax"
 JWT_COOKIE_SECURE = os.getenv("JWT_COOKIE_SECURE", "False") == "True"
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-DEFAULT_FROM_EMAIL = "Sectio <noreplay@sectio.eu>"
+DEFAULT_FROM_EMAIL = "Sectio <noreply@sectio.eu>"
