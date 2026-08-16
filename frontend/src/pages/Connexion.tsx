@@ -66,9 +66,10 @@ export function Connexion() {
 
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setIsSubmitted(true);
+  function changeVue(nouvelleVue: "connexion" | "resetPwd") {
+    setVue(nouvelleVue);
+    setErreurServeur(null);
+    setIsSubmitted(false);
   }
 
   return (
@@ -168,7 +169,7 @@ export function Connexion() {
                   <Button
                     type="button"
                     variant={"link"}
-                    onClick={() => setVue("resetPwd")}
+                    onClick={() => changeVue("resetPwd")}
                     className="ml-auto text-secondary inline-block text-sm underline-offset-4 hover:underline cursor-pointer"
                   >
                     Mot de passe oublié ?
@@ -199,19 +200,20 @@ export function Connexion() {
                   <LockIcon className="text-primary h-6 w-6" />
                 </div>
                 <CardTitle className="text-center text-2xl">
-                  Demande de réinitialisation du mot de passe
+                  Réinitialisation du mot de passe
                 </CardTitle>
                 <CardDescription className="text-center">
-                  Nous vous enverrons un lien de réinitialisation
+                  Nous vous enverrons un lien sur votre email lié à votre compte
+                  Sectio.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isSubmitted ? (
                   <Alert className="bg-green-50 text-green-800 dark:bg-green-900 dark:text-green-300">
                     <AlertDescription>
-                      Si votre email correspond à un compte utilisateur, votre
-                      demande de réinitialisation a bien été envoyé. Vérifiez
-                      vos spams.
+                      Votre demande de réinitialisation a bien été envoyé. Si
+                      votre email correspond à un compte utilisateur, vous avez
+                      reçu un lien cliquable. Vérifiez vos spams.
                     </AlertDescription>
                   </Alert>
                 ) : (
@@ -282,7 +284,7 @@ export function Connexion() {
                   Vous vous souvenez de votre mot de passe ?{" "}
                   <Button
                     variant="link"
-                    onClick={() => setVue("connexion")}
+                    onClick={() => changeVue("connexion")}
                     className="text-primary underline cursor-pointer m-0 p-0"
                   >
                     Connectez-vous

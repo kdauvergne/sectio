@@ -28,3 +28,12 @@ export async function deconnexion(): Promise<void> {
 export async function demandeResetPwd(email: string): Promise<void> {
   await publicApi.post("/mot-de-passe-oublie/", { email });
 }
+
+/** POST /api/reinitialiser-mot-de-passe/ */
+export async function resetPassword(donnees: {
+  uid: string;
+  token: string;
+  new_password: string;
+}): Promise<void> {
+  await publicApi.post("/reinitialiser-mot-de-passe/", donnees);
+}
