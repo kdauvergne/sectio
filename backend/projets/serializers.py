@@ -152,20 +152,20 @@ class TypePoteauSerializer(serializers.ModelSerializer):
         return niveau
 
 
-class ProjetDetailSerializer(ProjetSerializer):
-    """Projet avec ses bâtiments. Lecture seule sur la partie imbriquée."""
-
-    batiments = BatimentSerializer(many=True, read_only=True)
-
-    class Meta(ProjetSerializer.Meta):
-        fields = [*ProjetSerializer.Meta.fields, "batiments"]  # noqa: RUF012
-
-
 class BatimentDetailSerializer(BatimentSerializer):
     niveaux = NiveauSerializer(many=True, read_only=True)
 
     class Meta(BatimentSerializer.Meta):
         fields = [*BatimentSerializer.Meta.fields, "niveaux"]  # noqa: RUF012
+
+
+class ProjetDetailSerializer(ProjetSerializer):
+    """Projet avec ses bâtiments et leurs niveaux."""
+
+    batiments = BatimentDetailSerializer(many=True, read_only=True)
+
+    class Meta(ProjetSerializer.Meta):
+        fields = [*ProjetSerializer.Meta.fields, "batiments"]  # noqa: RUF012
 
 
 class NiveauDetailSerializer(NiveauSerializer):

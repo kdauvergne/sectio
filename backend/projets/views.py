@@ -31,7 +31,7 @@ class ProjetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self) -> QuerySet[Projet]:  # type: ignore[override]
         return Projet.objects.filter(membres=self.request.user).prefetch_related(
-            "batiments"
+            "batiments__niveaux"
         )
 
     def perform_create(self, serializer):
