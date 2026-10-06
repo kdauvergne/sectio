@@ -1,7 +1,6 @@
 import pytest
 
 from calculs.models import Calcul
-
 from projets.models import Batiment, Niveau, Poteau, Projet, TypePoteau
 
 
@@ -109,6 +108,18 @@ def test_detail_projet_contient_ses_batiments(client, utilisateur, projet):
 
     assert reponse.status_code == 200
     assert len(reponse.json()["batiments"]) == 1
+
+
+@pytest.mark.django_db
+def test_detail_projet_contient_niveaux(client, utilisateur, projet, niveau):
+    client.force_login(utilisateur)
+    reponse = client.get(f"/api/projets/{projet.pk}/")
+    assert reponse.status_code == 200
+
+    niveaux = reponse.json()["batiments"][0]["niveaux"]
+
+    assert len(niveaux) == 1
+    assert niveaux[0]["nom"] == niveau.nom
 
 
 @pytest.mark.django_db
