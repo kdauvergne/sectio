@@ -68,3 +68,14 @@ export type NouveauPoteau = {
   G: number;
   Q: number;
 };
+
+export type Batiment = {
+  id: number;
+  projet: number;
+  nom: string;
+  fck: number;
+  fyk: number;
+  classe_exposition: string;
+};
+
+export type ProjetDetail = Projet & { batiments: Batiment[] };
