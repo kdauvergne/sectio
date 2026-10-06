@@ -79,3 +79,15 @@ export type Batiment = {
 };
 
 export type ProjetDetail = Projet & { batiments: Batiment[] };
+
+export type Niveau = {
+  id: number;
+  batiment: number;
+  nom: string;
+  ordre: number;
+  fck: number;
+  fyk: number;
+  classe_exposition: string;
+};
+
+export type BatimentDetail = Batiment & { niveaux: Niveau[] };
