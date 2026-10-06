@@ -78,7 +78,7 @@ export type Batiment = {
   classe_exposition: string;
 };
 
-export type ProjetDetail = Projet & { batiments: Batiment[] };
+export type ProjetDetail = Projet & { batiments: BatimentDetail[] };
 
 export type Niveau = {
   id: number;
