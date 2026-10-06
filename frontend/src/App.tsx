@@ -9,6 +9,7 @@ import { Route, Routes } from "react-router-dom";
 import { RouteProtegee } from "@/components/RouteProtegee";
 import { Inscription } from "@/pages/Inscription";
 import { SaisieNiveau } from "./pages/SaisieNiveau";
+import { DetailProjet } from "./pages/DetailProjet";
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<TableauDeBord />} />
           <Route path="/projets" element={<div>Projets</div>} />
-          <Route path="/projets/:id" element={<div>Détail projet</div>} />
+          <Route path="/projets/:id" element={<DetailProjet />} />
           <Route path="/niveaux/:niveauId" element={<SaisieNiveau />} />
         </Route>
       </Route>
