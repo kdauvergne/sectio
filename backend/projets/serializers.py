@@ -170,6 +170,15 @@ class ProjetDetailSerializer(ProjetSerializer):
 
 class NiveauDetailSerializer(NiveauSerializer):
     poteaux = PoteauSerializer(many=True, read_only=True)
+    batiment_nom = serializers.CharField(source="batiment.nom", read_only=True)
+    projet = serializers.IntegerField(source="batiment.projet_id", read_only=True)
+    projet_nom = serializers.CharField(source="batiment.projet.nom", read_only=True)
 
     class Meta(NiveauSerializer.Meta):
-        fields = [*NiveauSerializer.Meta.fields, "poteaux"]  # noqa: RUF012
+        fields = [  # noqa: RUF012
+            *NiveauSerializer.Meta.fields,
+            "poteaux",
+            "batiment_nom",
+            "projet",
+            "projet_nom",
+        ]
