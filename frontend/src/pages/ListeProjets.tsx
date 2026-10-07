@@ -1,9 +1,7 @@
 import { CarteProjet } from "@/components/projets/CarteProjet";
-import { POTEAUX_DEMO } from "@/donnees-demo";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { recupererProjets } from "@/api/projets";
-import { TableauPoteaux } from "@/components/poteaux/TableauPoteaux";
 import { BarreRecherche } from "@/components/projets/BarreRecherche";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -58,8 +56,6 @@ export function ListeProjets() {
           </p>
         )}
       </div>
-      <h2 className="text-xl font-semibold mt-10 mb-4">Poteaux du niveau</h2>
-      <TableauPoteaux poteaux={POTEAUX_DEMO} />
     </div>
   );
 }
