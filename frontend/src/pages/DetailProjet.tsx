@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 
 import { recupererProjet } from "@/api/projets";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFilAriane } from "@/hooks/use-fil-ariane";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import {
   Item,
@@ -24,6 +25,12 @@ export function DetailProjet() {
     queryKey: ["projets", id],
     queryFn: id ? () => recupererProjet(id) : skipToken,
   });
+
+  useFilAriane([
+    { libelle: "Projets", url: "/projets" },
+    { libelle: projet?.nom ?? "…" },
+  ]);
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold">{projet?.nom}</h1>

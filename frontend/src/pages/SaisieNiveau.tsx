@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { recupererPoteaux } from "@/api/poteaux";
+import { recupererNiveau } from "@/api/projets";
 import { TableauPoteaux } from "@/components/poteaux/TableauPoteaux";
 import { TableauSaisiePoteaux } from "@/components/poteaux/TableauSaisiePoteaux";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFilAriane } from "@/hooks/use-fil-ariane";
 
 export function SaisieNiveau() {
   const { niveauId } = useParams();
@@ -20,12 +22,31 @@ export function SaisieNiveau() {
     enabled: identifiantValide,
   });
 
+  const { data: niveau } = useQuery({
+    queryKey: ["niveaux", identifiant],
+    queryFn: () => recupererNiveau(identifiant),
+    enabled: identifiantValide,
+  });
+
+  useFilAriane(
+    niveau
+      ? [
+          { libelle: "Projets", url: "/projets" },
+          { libelle: niveau.projet_nom, url: `/projets/${niveau.projet}` },
+          { libelle: niveau.batiment_nom },
+          { libelle: niveau.nom },
+        ]
+      : [{ libelle: "Projets", url: "/projets" }],
+  );
+
   if (!identifiantValide) {
     return <p className="text-destructive p-8">Niveau introuvable.</p>;
   }
 
   return (
     <div className="space-y-10 p-6">
+      <h1 className="text-2xl font-semibold">{niveau?.nom}</h1>
+
       <section>
         <h2 className="mb-4 text-lg font-semibold">Poteaux enregistrés</h2>
         {isPending && <Skeleton className="h-32 w-full" />}

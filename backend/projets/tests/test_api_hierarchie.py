@@ -123,6 +123,19 @@ def test_detail_projet_contient_niveaux(client, utilisateur, projet, niveau):
 
 
 @pytest.mark.django_db
+def test_detail_niveau_contient_fil_ariane(client, utilisateur, projet, niveau):
+    client.force_login(utilisateur)
+    reponse = client.get(f"/api/niveaux/{niveau.pk}/")
+    assert reponse.status_code == 200
+
+    donnees = reponse.json()
+
+    assert donnees["batiment_nom"] == "Bâtiment A"
+    assert donnees["projet"] == projet.pk
+    assert donnees["projet_nom"] == "Résidence Garonne"
+
+
+@pytest.mark.django_db
 def test_filtrage_par_parametre(client, utilisateur, projet):
     batiment = Batiment.objects.create(projet=projet, nom="Bâtiment A")
     Niveau.objects.create(batiment=batiment, nom="R+1")
