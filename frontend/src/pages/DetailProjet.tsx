@@ -1,8 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 
 import { recupererProjet } from "@/api/projets";
-import { FilAriane } from "@/components/layout/FilAriane";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFilAriane } from "@/hooks/use-fil-ariane";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import {
   Item,
@@ -25,14 +25,14 @@ export function DetailProjet() {
     queryKey: ["projets", id],
     queryFn: id ? () => recupererProjet(id) : skipToken,
   });
+
+  useFilAriane([
+    { libelle: "Projets", url: "/projets" },
+    { libelle: projet?.nom ?? "…" },
+  ]);
+
   return (
     <div className="p-6">
-      <FilAriane
-        elements={[
-          { libelle: "Projets", url: "/projets" },
-          { libelle: projet?.nom ?? "…" },
-        ]}
-      />
       <h1 className="text-2xl font-semibold">{projet?.nom}</h1>
 
       {isPending && (

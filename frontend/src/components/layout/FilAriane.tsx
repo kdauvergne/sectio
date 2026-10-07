@@ -17,7 +17,7 @@ export type ElementFilAriane = {
 
 export function FilAriane({ elements }: { elements: ElementFilAriane[] }) {
   return (
-    <Breadcrumb className="mb-4">
+    <Breadcrumb>
       <BreadcrumbList>
         {elements.map((element, index) => {
           const estDernier = index === elements.length - 1;
