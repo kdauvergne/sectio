@@ -23,7 +23,7 @@ export function AppLayout() {
             <>
               <Separator
                 orientation="vertical"
-                className="mr-2 h-4 w-px self-center"
+                className="mr-2 data-vertical:h-4 data-vertical:self-center"
               />
               <FilAriane elements={filAriane} />
             </>
