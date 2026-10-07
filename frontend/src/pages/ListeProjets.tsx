@@ -7,7 +7,7 @@ import { TableauPoteaux } from "@/components/poteaux/TableauPoteaux";
 import { BarreRecherche } from "@/components/projets/BarreRecherche";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function TableauDeBord() {
+export function ListeProjets() {
   const [recherche, setRecherche] = useState("");
 
   const {
@@ -26,7 +26,7 @@ export function TableauDeBord() {
   return (
     <div>
       <div className="grid gap-4 max-w-2xl mx-5 ">
-        <h1 className="text-2xl font-semibold mb-6">Tableau de bord</h1>
+        <h1 className="text-2xl font-semibold mb-6">Projets</h1>
       </div>
       <div className="mb-6">
         <BarreRecherche valeur={recherche} onChangement={setRecherche} />

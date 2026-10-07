@@ -4,8 +4,8 @@ import { ReinitialiserMotDePasse } from "@/pages/ResetPassword";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { MotDePasseOublie } from "@/pages/MotDePasseOublie";
 
-import { TableauDeBord } from "@/pages/TableauDeBord";
-import { Route, Routes } from "react-router-dom";
+import { ListeProjets } from "@/pages/ListeProjets";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { RouteProtegee } from "@/components/RouteProtegee";
 import { Inscription } from "@/pages/Inscription";
 import { SaisieNiveau } from "./pages/SaisieNiveau";
@@ -24,8 +24,8 @@ function App() {
 
       <Route element={<RouteProtegee />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<TableauDeBord />} />
-          <Route path="/projets" element={<div>Projets</div>} />
+          <Route path="/" element={<ListeProjets />} />
+          <Route path="/projets" element={<Navigate to="/" replace />} />
           <Route path="/projets/:id" element={<DetailProjet />} />
           <Route path="/niveaux/:niveauId" element={<SaisieNiveau />} />
         </Route>

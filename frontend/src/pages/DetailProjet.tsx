@@ -27,7 +27,7 @@ export function DetailProjet() {
   });
 
   useFilAriane([
-    { libelle: "Projets", url: "/projets" },
+    { libelle: "Projets", url: "/" },
     { libelle: projet?.nom ?? "…" },
   ]);
 
