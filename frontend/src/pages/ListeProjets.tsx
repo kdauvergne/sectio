@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { recupererProjets } from "@/api/projets";
 import { BarreRecherche } from "@/components/projets/BarreRecherche";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { compteurProjets } from "@/lib/projets";
@@ -30,8 +31,9 @@ export function ListeProjets() {
     queryFn: recupererProjets,
   });
 
+  const filtre = recherche.trim().toLowerCase();
   const projetFiltres = (projets ?? []).filter((projet) =>
-    projet.nom.toLowerCase().includes(recherche.toLowerCase()),
+    projet.nom.toLowerCase().includes(filtre),
   );
 
   return (
@@ -48,7 +50,7 @@ export function ListeProjets() {
           <h2 className="text-[15px] font-semibold">Tous les projets</h2>
           {projets && (
             <span className="text-[13px] text-muted-foreground">
-              {compteurProjets(projetFiltres.length, recherche.trim() !== "")}
+              {compteurProjets(projetFiltres.length, filtre !== "")}
             </span>
           )}
         </div>
@@ -77,13 +79,18 @@ export function ListeProjets() {
           projetFiltres.map((projet) => (
             <CarteProjet key={projet.id} projet={projet} />
           ))}
-
-        {!isPending && !isError && projetFiltres.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Aucun projet ne correspond à « {recherche} ».
-          </p>
-        )}
       </div>
+
+      {!isPending && !isError && filtre !== "" && projetFiltres.length === 0 && (
+        <div className="flex flex-col items-start gap-3.5 border-t py-11">
+          <p className="text-sm text-muted-foreground">
+            Aucun projet ne correspond à « {recherche.trim()} ».
+          </p>
+          <Button variant="outline" size="sm" onClick={() => setRecherche("")}>
+            Effacer le filtre
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
