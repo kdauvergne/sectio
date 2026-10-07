@@ -31,12 +31,12 @@ export function SaisieNiveau() {
   useFilAriane(
     niveau
       ? [
-          { libelle: "Projets", url: "/projets" },
+          { libelle: "Projets", url: "/" },
           { libelle: niveau.projet_nom, url: `/projets/${niveau.projet}` },
           { libelle: niveau.batiment_nom },
           { libelle: niveau.nom },
         ]
-      : [{ libelle: "Projets", url: "/projets" }],
+      : [{ libelle: "Projets", url: "/" }],
   );
 
   if (!identifiantValide) {

@@ -1,14 +1,15 @@
-import type { LucideIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ChevronsUpDown,
   FolderKanban,
-  LayoutDashboard,
   LogOut,
   Settings,
   Sigma,
   UserCircle,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+
+import { recupererProjets } from "@/api/projets";
 
 import {
   Sidebar,
@@ -40,31 +41,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
 
-type LienNavigation = {
-  titre: string;
-  url: string;
-  icone: LucideIcon;
-};
-
 type Utilisateur = {
   nom: string;
   prenom: string;
   titre: string;
   avatar: string;
 };
-
-const NAVIGATION: LienNavigation[] = [
-  {
-    titre: "Tableau de bord",
-    url: "/",
-    icone: LayoutDashboard,
-  },
-  {
-    titre: "Projets",
-    url: "/projets",
-    icone: FolderKanban,
-  },
-];
 
 const user: Utilisateur = {
   nom: "Dubois",
@@ -76,8 +58,12 @@ const user: Utilisateur = {
 export function AppSidebar() {
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
-  const projetsOuvert = pathname.startsWith("/projets");
   const { utilisateur, seDeconnecter } = useAuth();
+
+  const { data: projets } = useQuery({
+    queryKey: ["projets"],
+    queryFn: recupererProjets,
+  });
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -105,43 +91,33 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAVIGATION.map((lien) => {
-                const estProjets = lien.titre === "Projets";
-                const Icone = lien.icone;
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Projets"
+                  isActive={pathname === "/"}
+                  asChild
+                >
+                  <Link to="/">
+                    <FolderKanban />
+                    <span>Projets</span>
+                  </Link>
+                </SidebarMenuButton>
 
-                return (
-                  <SidebarMenuItem key={lien.url}>
-                    <SidebarMenuButton tooltip={lien.titre} asChild>
-                      <Link to={lien.url}>
-                        <Icone />
-                        <span>{lien.titre}</span>
-                      </Link>
-                    </SidebarMenuButton>
-
-                    {estProjets && projetsOuvert && (
-                      <SidebarMenuSub>
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/projets/alpha">Projet Alpha</Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/projets/beta">Projet Beta</Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-
-                        <SidebarMenuSubItem>
-                          <SidebarMenuSubButton asChild>
-                            <Link to="/projets/gamma">Projet Gamma</Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                );
-              })}
+                {projets && projets.length > 0 && (
+                  <SidebarMenuSub>
+                    {projets.map((projet) => (
+                      <SidebarMenuSubItem key={projet.id}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname === `/projets/${projet.id}`}
+                        >
+                          <Link to={`/projets/${projet.id}`}>{projet.nom}</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                )}
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
