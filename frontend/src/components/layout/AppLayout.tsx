@@ -30,7 +30,7 @@ export function AppLayout() {
           )}
         </header>
 
-        <div className="px-6 pb-6">
+        <div className="px-10 pb-6">
           <Outlet context={{ setFilAriane }} />
         </div>
       </SidebarInset>
