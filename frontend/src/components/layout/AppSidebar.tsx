@@ -4,7 +4,6 @@ import {
   FolderKanban,
   LogOut,
   Settings,
-  Sigma,
   UserCircle,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -72,12 +71,12 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-secondary text-sidebar-primary-foreground">
-                  <Sigma className="size-4 text-amber-600" />
+                <div className="flex aspect-square size-7 items-center justify-center rounded-md bg-secondary">
+                  <span className="size-2.25 rounded-[2px] bg-primary" />
                 </div>
 
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-bold">Sectio</span>
+                  <span className="marque truncate">Sectio</span>
                 </div>
               </Link>
             </SidebarMenuButton>
