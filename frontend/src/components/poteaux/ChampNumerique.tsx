@@ -14,7 +14,7 @@ export function ChampNumerique({ field, disabled }: Props) {
       <Input
         name={field.name}
         type="number"
-        step="0.01"
+        step="any"
         disabled={disabled}
         value={field.state.value ?? ""}
         onBlur={field.handleBlur}
@@ -24,7 +24,7 @@ export function ChampNumerique({ field, disabled }: Props) {
           )
         }
         aria-invalid={estInvalide}
-        className="h-8"
+        className="h-8 [appearance:textfield] px-2 text-right [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       {estInvalide && (
         <p className="text-destructive mt-1 text-xs">

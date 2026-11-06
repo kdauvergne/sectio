@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const schemaPoteau = z
   .object({
+    id: z.number().optional(),
     repere: z
       .string()
       .trim()
@@ -58,7 +59,7 @@ export type SaisiePoteau = z.infer<typeof schemaPoteau>;
 
 export const schemaSaisieNiveau = z
   .object({
-    poteaux: z.array(schemaPoteau).min(1, "Ajoutez au moins un poteau"),
+    poteaux: z.array(schemaPoteau),
   })
   .superRefine((valeurs, ctx) => {
     const reperesVus = new Set<string>();
