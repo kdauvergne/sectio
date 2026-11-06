@@ -57,3 +57,26 @@ def test_aucun_type_si_tous_les_poteaux_echouent():
 
     assert types == []
     assert [p.reference for p, _ in echecs] == ["1"]
+
+
+def test_type_2_couvre_le_poteau_le_plus_exigeant():
+    def poteau_60x60(reference, G, Q):
+        return replace(
+            poteau(reference, G), Q=Q, fck=45.0, L0=3.0, d_prime=0.04, b=0.60, h=0.60
+        )
+
+    poteaux = [
+        poteau_60x60("max", 4200.0, 1500.0),
+        poteau_60x60("min_faible", 600.0, 150.0),
+        poteau_60x60("min_fort", 2500.0, 500.0),
+    ]
+    methode = MethodeSimplifiee()
+
+    types, _ = proposer_types(poteaux, methode)
+
+    type_2 = types[1]
+    assert {p.reference for p in type_2.poteaux_couverts} == {"min_faible", "min_fort"}
+    assert type_2.poteau_representatif.reference == "min_fort"
+    for couvert in type_2.poteaux_couverts:
+        assert methode.calculer(couvert).as_min_gouverne is True
+        assert type_2.resultat.As >= methode.calculer(couvert).As

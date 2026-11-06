@@ -55,10 +55,11 @@ def proposer_types(
 
     if type_2_couples:
         poteaux_type_2 = [p for p, r in type_2_couples]
-        resultat_2 = type_2_couples[0][1]
+        # As,min dépend de NEd : le type doit couvrir le poteau le plus exigeant.
+        poteau_2, resultat_2 = max(type_2_couples, key=lambda couple: couple[1].As)
         type_2 = TypeFerraillage(
             resultat=resultat_2,
-            poteau_representatif=type_2_couples[0][0],
+            poteau_representatif=poteau_2,
             poteaux_couverts=poteaux_type_2,
         )
     else:
