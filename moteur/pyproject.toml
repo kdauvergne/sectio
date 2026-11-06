@@ -1,6 +1,6 @@
 [project]
 name = "sectio-moteur"
-version = "0.1.0"
+version = "0.1.1"
 description = "Moteur de calcul méthode simplifiée selon Eurocode 2"
 authors = [
     {name = "kdauvergne",email = "keysone.dauvergne@gmail.com"}
