@@ -110,7 +110,9 @@ export function AppSidebar() {
                           asChild
                           isActive={pathname === `/projets/${projet.id}`}
                         >
-                          <Link to={`/projets/${projet.id}`}>{projet.nom}</Link>
+                          <Link to={`/projets/${projet.id}`} title={projet.nom}>
+                            <span>{projet.nom}</span>
+                          </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     ))}
