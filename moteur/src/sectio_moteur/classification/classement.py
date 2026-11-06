@@ -38,6 +38,9 @@ def proposer_types(
     echecs la liste des poteaux qui ont échoué au calcul.
     """
     succes, echecs = calculer_tous_les_poteaux(poteaux, methode)
+    if not succes:
+        return [], echecs
+
     poteau_1, resultat_1 = max(succes, key=lambda couple: couple[1].As)
 
     type_1 = TypeFerraillage(

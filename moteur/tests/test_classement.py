@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from sectio_moteur.classification.classement import proposer_types
 from sectio_moteur.methode_simplifiee import MethodeSimplifiee
 from sectio_moteur.modeles import PoteauInput
@@ -46,3 +48,12 @@ def test_chaque_type_a_un_representatif():
         assert (
             type_ferraillage.poteau_representatif in type_ferraillage.poteaux_couverts
         )
+
+
+def test_aucun_type_si_tous_les_poteaux_echouent():
+    hors_domaine = replace(poteau("1", 1209.0), fck=60.0)
+
+    types, echecs = proposer_types([hors_domaine], MethodeSimplifiee())
+
+    assert types == []
+    assert [p.reference for p, _ in echecs] == ["1"]

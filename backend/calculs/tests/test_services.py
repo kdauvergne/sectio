@@ -3,6 +3,7 @@ from sectio_moteur.methode_simplifiee import MethodeSimplifiee
 
 from calculs.services import (
     VERSION_MOTEUR,
+    calculer_niveau,
     calculer_poteau,
     poteau_vers_entree,
 )
@@ -88,3 +89,14 @@ def test_ferraillage_impossible_est_archive(poteau_reference, niveau, utilisateu
     calcul = calculer_poteau(poteau_reference, type_poteau, utilisateur)
 
     assert calcul.ferraillage_impossible == resultat.ferraillage_impossible
+
+
+@pytest.mark.django_db
+def test_niveau_sans_succes_renvoie_les_echecs(poteau_reference, niveau, utilisateur):
+    poteau_reference.taux_travail_min = 1.1
+    poteau_reference.save(update_fields=["taux_travail_min"])
+
+    types, echecs = calculer_niveau(niveau, utilisateur)
+
+    assert types == []
+    assert [entree.reference for entree, _ in echecs] == [str(poteau_reference.pk)]
