@@ -1,14 +1,12 @@
 import type { Projet } from "@/types/api";
-import { classeResistance } from "@/lib/beton";
-import { Badge } from "@/components/ui/badge";
+import { PastilleProjet } from "@/components/projets/PastilleProjet";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Square } from "lucide-react";
+import { dateRelative } from "@/lib/projets";
 import { Link } from "react-router-dom";
 
 type CarteProjetProps = {
@@ -16,39 +14,15 @@ type CarteProjetProps = {
 };
 
 export function CarteProjet({ projet }: CarteProjetProps) {
-  const dateFormatee = new Date(projet.date_creation).toLocaleDateString(
-    "fr-FR",
-    {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    },
-  );
   return (
     <Link to={`/projets/${projet.id}`}>
       <Card className="h-full min-h-40 transition hover:shadow-md hover:-translate-y-1">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="w-fit rounded bg-primary/10 p-2">
-              <Square className="size-4 text-primary" />
-            </div>
-            <div>
-              <Badge variant="default">Conforme</Badge>
-            </div>
-          </div>
-          <CardTitle className="line-clamp-2 pt-5">{projet.nom}</CardTitle>
-          <CardDescription className="line-clamp-2">
-            {projet.description}
-          </CardDescription>
+          <PastilleProjet nom={projet.nom} className="size-7.5 text-[13px]" />
+          <CardTitle className="line-clamp-2 pt-3">{projet.nom}</CardTitle>
         </CardHeader>
-        <CardContent className="mt-auto">
-          <div className="flex gap-2">
-            <Badge variant="secondary">{classeResistance(projet.fck)}</Badge>
-            <Badge variant="secondary">{projet.classe_exposition}</Badge>
-          </div>
-          <span className="mt-3 block text-xs text-muted-foreground">
-            Créé le {dateFormatee}
-          </span>
+        <CardContent className="mt-auto text-xs text-muted-foreground">
+          {dateRelative(projet.date_creation)}
         </CardContent>
       </Card>
     </Link>
