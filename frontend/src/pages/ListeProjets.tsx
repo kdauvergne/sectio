@@ -59,13 +59,10 @@ export function ListeProjets() {
       <div className="mt-4 mb-6">
         <BarreRecherche valeur={recherche} onChangement={setRecherche} />
       </div>
-      <div className="grid grid-cols-3 gap-4 xl:grid-cols-5">
+      <div className="grid auto-rows-fr grid-cols-3 gap-4 xl:grid-cols-5">
         {isPending &&
           Array.from({ length: 3 }, (_, index) => (
-            <Skeleton
-              key={index}
-              className="my-5 h-40 w-full max-w-xs rounded-xl"
-            />
+            <Skeleton key={index} className="h-40 w-full rounded-xl" />
           ))}
 
         {isError && (

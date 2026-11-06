@@ -25,8 +25,8 @@ export function CarteProjet({ projet }: CarteProjetProps) {
     },
   );
   return (
-    <Link to={`/projets/${projet.id}`} className="card-link ">
-      <Card className="w-full max-w-xs min-h-40 my-5 transition hover:shadow-md hover:-translate-y-1">
+    <Link to={`/projets/${projet.id}`}>
+      <Card className="h-full min-h-40 transition hover:shadow-md hover:-translate-y-1">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="w-fit rounded bg-primary/10 p-2">
@@ -36,8 +36,10 @@ export function CarteProjet({ projet }: CarteProjetProps) {
               <Badge variant="default">Conforme</Badge>
             </div>
           </div>
-          <CardTitle className="pt-5">{projet.nom}</CardTitle>
-          <CardDescription>{projet.description}</CardDescription>
+          <CardTitle className="line-clamp-2 pt-5">{projet.nom}</CardTitle>
+          <CardDescription className="line-clamp-2">
+            {projet.description}
+          </CardDescription>
         </CardHeader>
         <CardContent className="mt-auto">
           <div className="flex gap-2">
