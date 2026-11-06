@@ -5,6 +5,7 @@ from calculs.services import (
     VERSION_MOTEUR,
     calculer_niveau,
     calculer_poteau,
+    grouper_par_section,
     poteau_vers_entree,
 )
 from projets.models import Batiment, Niveau, Poteau, Projet, TypePoteau
@@ -89,6 +90,29 @@ def test_ferraillage_impossible_est_archive(poteau_reference, niveau, utilisateu
     calcul = calculer_poteau(poteau_reference, type_poteau, utilisateur)
 
     assert calcul.ferraillage_impossible == resultat.ferraillage_impossible
+
+
+@pytest.mark.django_db
+def test_grouper_separe_les_fck_differents(niveau):
+    communs = {
+        "niveau": niveau,
+        "type_section": "rectangulaire",
+        "b": 0.50,
+        "h": 0.40,
+        "L0": 5.0,
+        "d_prime": 0.04,
+        "G": 1000.0,
+        "Q": 300.0,
+    }
+    poteaux = [
+        Poteau.objects.create(repere="P1", fck=30.0, **communs),
+        Poteau.objects.create(repere="P2", fck=30.0, **communs),
+        Poteau.objects.create(repere="P3", fck=45.0, **communs),
+    ]
+
+    groupes = grouper_par_section(poteaux).values()
+
+    assert sorted(len(groupe) for groupe in groupes) == [1, 2]
 
 
 @pytest.mark.django_db
