@@ -2,6 +2,7 @@ const MINUTE = 60_000;
 const HEURE = 3_600_000;
 const JOUR = 86_400_000;
 const CLE_AFFICHAGE = "sectio.affichageProjets";
+const CLE_SIDEBAR_PROJETS = "sectio.sidebarProjetsOuverts";
 
 export type AffichageProjets = "liste" | "cartes";
 
@@ -19,6 +20,23 @@ export function enregistrerAffichage(affichage: AffichageProjets): void {
     localStorage.setItem(CLE_AFFICHAGE, affichage);
   } catch {
     // Stockage indisponible : la vue reste valable jusqu'au rechargement.
+  }
+}
+
+/** Liste des projets de la sidebar, repliée par défaut. */
+export function lireSidebarProjetsOuverts(): boolean {
+  try {
+    return localStorage.getItem(CLE_SIDEBAR_PROJETS) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function enregistrerSidebarProjetsOuverts(ouverts: boolean): void {
+  try {
+    localStorage.setItem(CLE_SIDEBAR_PROJETS, String(ouverts));
+  } catch {
+    // Stockage indisponible : l'état reste valable jusqu'au rechargement.
   }
 }
 

@@ -1,14 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  ChevronRight,
   ChevronsUpDown,
   FolderKanban,
   LogOut,
   Settings,
   UserCircle,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { recupererProjets } from "@/api/projets";
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 import {
   Sidebar,
@@ -18,6 +26,7 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -39,6 +48,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  enregistrerSidebarProjetsOuverts,
+  lireSidebarProjetsOuverts,
+} from "@/lib/projets";
 
 type Utilisateur = {
   nom: string;
@@ -58,6 +71,21 @@ export function AppSidebar() {
   const isMobile = useIsMobile();
   const { pathname } = useLocation();
   const { utilisateur, seDeconnecter } = useAuth();
+  const [projetsOuverts, setProjetsOuverts] = useState(
+    lireSidebarProjetsOuverts,
+  );
+
+  function changerProjetsOuverts(ouverts: boolean) {
+    setProjetsOuverts(ouverts);
+    enregistrerSidebarProjetsOuverts(ouverts);
+  }
+
+  useEffect(() => {
+    if (pathname.startsWith("/projets/")) {
+      setProjetsOuverts(false);
+      enregistrerSidebarProjetsOuverts(false);
+    }
+  }, [pathname]);
 
   const { data: projets } = useQuery({
     queryKey: ["projets"],
@@ -90,35 +118,60 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Projets"
-                  isActive={pathname === "/"}
-                  asChild
-                >
-                  <Link to="/">
-                    <FolderKanban />
-                    <span>Projets</span>
-                  </Link>
-                </SidebarMenuButton>
+              <Collapsible
+                asChild
+                open={projetsOuverts}
+                onOpenChange={changerProjetsOuverts}
+              >
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Projets"
+                    isActive={pathname === "/"}
+                    asChild
+                  >
+                    <Link
+                      to="/"
+                      aria-expanded={projetsOuverts}
+                      onClick={() => changerProjetsOuverts(!projetsOuverts)}
+                    >
+                      <FolderKanban />
+                      <span>Projets</span>
+                    </Link>
+                  </SidebarMenuButton>
 
-                {projets && projets.length > 0 && (
-                  <SidebarMenuSub>
-                    {projets.map((projet) => (
-                      <SidebarMenuSubItem key={projet.id}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={pathname === `/projets/${projet.id}`}
+                  {projets && projets.length > 0 && (
+                    <>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuAction
+                          aria-label="Afficher ou masquer les projets"
+                          className="data-[state=open]:rotate-90"
                         >
-                          <Link to={`/projets/${projet.id}`} title={projet.nom}>
-                            <span>{projet.nom}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                )}
-              </SidebarMenuItem>
+                          <ChevronRight />
+                        </SidebarMenuAction>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {projets.map((projet) => (
+                            <SidebarMenuSubItem key={projet.id}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === `/projets/${projet.id}`}
+                              >
+                                <Link
+                                  to={`/projets/${projet.id}`}
+                                  title={projet.nom}
+                                >
+                                  <span>{projet.nom}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </>
+                  )}
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
