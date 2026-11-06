@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { recupererPoteaux } from "@/api/poteaux";
 import { recupererNiveau } from "@/api/projets";
 import { TableauPoteaux } from "@/components/poteaux/TableauPoteaux";
-import { TableauSaisiePoteaux } from "@/components/poteaux/TableauSaisiePoteaux";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFilAriane } from "@/hooks/use-fil-ariane";
+import type { NiveauDetail } from "@/types/api";
+
+function titreNiveau({ nom, poteaux }: NiveauDetail): string {
+  if (poteaux.length === 0) return `Niveau ${nom}`;
+  const saisis = poteaux.length > 1 ? "poteaux saisis" : "poteau saisi";
+  return `Niveau ${nom} — ${poteaux.length} ${saisis}`;
+}
 
 export function SaisieNiveau() {
   const { niveauId } = useParams();
@@ -13,16 +18,10 @@ export function SaisieNiveau() {
   const identifiantValide = Number.isInteger(identifiant);
 
   const {
-    data: poteaux,
+    data: niveau,
     isPending,
     isError,
   } = useQuery({
-    queryKey: ["poteaux", identifiant],
-    queryFn: () => recupererPoteaux(identifiant),
-    enabled: identifiantValide,
-  });
-
-  const { data: niveau } = useQuery({
     queryKey: ["niveaux", identifiant],
     queryFn: () => recupererNiveau(identifiant),
     enabled: identifiantValide,
@@ -43,30 +42,60 @@ export function SaisieNiveau() {
     return <p className="text-destructive p-8">Niveau introuvable.</p>;
   }
 
+  if (isPending) {
+    return (
+      <div className="space-y-6 p-6">
+        <Skeleton className="h-7 w-80" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <p className="text-destructive p-6 text-sm">
+        Impossible de charger le niveau.
+      </p>
+    );
+  }
+
+  const hypotheses = [
+    { libelle: "fck", valeur: `${niveau.fck} MPa` },
+    { libelle: "fyk", valeur: `${niveau.fyk} MPa` },
+    { libelle: "Exposition", valeur: niveau.classe_exposition },
+  ];
+  const calcule = niveau.poteaux.some((poteau) => poteau.type_poteau !== null);
+
   return (
-    <div className="space-y-10 p-6">
-      <h1 className="titre-niveau">{niveau?.nom}</h1>
+    <div className="space-y-6 p-6">
+      <div className="flex items-end justify-between gap-6">
+        <div className="flex flex-col gap-2.5">
+          <h1 className="titre-niveau">{titreNiveau(niveau)}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="entete-tableau text-muted-foreground uppercase">
+              Hypothèses du niveau
+            </span>
+            {hypotheses.map(({ libelle, valeur }) => (
+              <span
+                key={libelle}
+                className="info-carte inline-flex items-baseline gap-1.5 rounded-md border px-2.25 py-0.75"
+              >
+                <span className="text-muted-foreground">{libelle}</span>
+                <span className="font-mono">{valeur}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <span className="info-carte text-muted-foreground shrink-0">
+          {calcule ? "Calculé" : "Jamais calculé"}
+        </span>
+      </div>
 
-      <section>
-        <h2 className="titre-section mb-4">Poteaux enregistrés</h2>
-        {isPending && <Skeleton className="h-32 w-full" />}
-        {isError && (
-          <p className="text-destructive text-sm">
-            Impossible de charger les poteaux.
-          </p>
-        )}
-        {poteaux && poteaux.length > 0 && <TableauPoteaux poteaux={poteaux} />}
-        {poteaux && poteaux.length === 0 && (
-          <p className="text-muted-foreground text-sm">
-            Aucun poteau saisi pour l'instant.
-          </p>
-        )}
-      </section>
-
-      <section>
-        <h2 className="titre-section mb-4">Ajouter des poteaux</h2>
-        <TableauSaisiePoteaux niveauId={identifiant} />
-      </section>
+      <TableauPoteaux
+        key={identifiant}
+        niveauId={identifiant}
+        poteaux={niveau.poteaux}
+      />
     </div>
   );
 }
