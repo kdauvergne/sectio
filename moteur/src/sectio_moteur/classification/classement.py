@@ -38,6 +38,9 @@ def proposer_types(
     echecs la liste des poteaux qui ont échoué au calcul.
     """
     succes, echecs = calculer_tous_les_poteaux(poteaux, methode)
+    if not succes:
+        return [], echecs
+
     poteau_1, resultat_1 = max(succes, key=lambda couple: couple[1].As)
 
     type_1 = TypeFerraillage(
@@ -52,10 +55,11 @@ def proposer_types(
 
     if type_2_couples:
         poteaux_type_2 = [p for p, r in type_2_couples]
-        resultat_2 = type_2_couples[0][1]
+        # As,min dépend de NEd : le type doit couvrir le poteau le plus exigeant.
+        poteau_2, resultat_2 = max(type_2_couples, key=lambda couple: couple[1].As)
         type_2 = TypeFerraillage(
             resultat=resultat_2,
-            poteau_representatif=type_2_couples[0][0],
+            poteau_representatif=poteau_2,
             poteaux_couverts=poteaux_type_2,
         )
     else:

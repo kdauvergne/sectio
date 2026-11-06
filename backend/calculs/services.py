@@ -118,14 +118,24 @@ def verifier_poteau(
 
 
 def grouper_par_section(poteaux: list[Poteau]) -> dict:
-    """Range les poteaux par section identique.
+    """Range les poteaux par section et matériaux identiques.
 
-    Retourne un dictionnaire : {(type, b, h, diametre): [poteaux]}
+    Un Calcul fige un seul fck et un seul fyk : deux poteaux de matériaux
+    différents ne peuvent pas partager un même type.
+
+    Retourne un dictionnaire : {(type, b, h, diametre, fck, fyk): [poteaux]}
     """
     groupes: dict = {}
 
     for poteau in poteaux:
-        cle = (poteau.type_section, poteau.b, poteau.h, poteau.diametre)
+        cle = (
+            poteau.type_section,
+            poteau.b,
+            poteau.h,
+            poteau.diametre,
+            poteau.fck,
+            poteau.fyk,
+        )
         groupes.setdefault(cle, []).append(poteau)
 
     return groupes
