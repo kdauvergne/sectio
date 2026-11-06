@@ -52,17 +52,15 @@ export function ListeProjets() {
   return (
     <div className="w-full pt-8 pb-16">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-[32px] leading-tight font-semibold tracking-tight">
-          Bonjour {utilisateur?.first_name}
-        </h1>
-        <span className="text-sm text-muted-foreground">{dateDuJour()}</span>
+        <h1 className="titre-accueil">Bonjour {utilisateur?.first_name}</h1>
+        <span className="info-page text-muted-foreground">{dateDuJour()}</span>
       </div>
 
       <div className="mt-13 flex items-end justify-between gap-6 border-t pt-5">
         <div className="flex items-baseline gap-2.5">
-          <h2 className="text-[15px] font-semibold">Tous les projets</h2>
+          <h2 className="titre-section">Tous les projets</h2>
           {projets && (
-            <span className="text-[13px] text-muted-foreground">
+            <span className="info text-muted-foreground">
               {compteurProjets(projetFiltres.length, filtre !== "")}
             </span>
           )}
