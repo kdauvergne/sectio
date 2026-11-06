@@ -1,6 +1,26 @@
 const MINUTE = 60_000;
 const HEURE = 3_600_000;
 const JOUR = 86_400_000;
+const CLE_AFFICHAGE = "sectio.affichageProjets";
+
+export type AffichageProjets = "liste" | "cartes";
+
+/** Vue mémorisée dans ce navigateur, "liste" par défaut. */
+export function lireAffichage(): AffichageProjets {
+  try {
+    return localStorage.getItem(CLE_AFFICHAGE) === "cartes" ? "cartes" : "liste";
+  } catch {
+    return "liste";
+  }
+}
+
+export function enregistrerAffichage(affichage: AffichageProjets): void {
+  try {
+    localStorage.setItem(CLE_AFFICHAGE, affichage);
+  } catch {
+    // Stockage indisponible : la vue reste valable jusqu'au rechargement.
+  }
+}
 
 /** Première lettre du nom, en majuscule, pour la pastille du projet */
 export function initiale(nom: string): string {
