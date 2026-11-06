@@ -45,10 +45,10 @@ export function SaisieNiveau() {
 
   return (
     <div className="space-y-10 p-6">
-      <h1 className="text-2xl font-semibold">{niveau?.nom}</h1>
+      <h1 className="titre-niveau">{niveau?.nom}</h1>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Poteaux enregistrés</h2>
+        <h2 className="titre-section mb-4">Poteaux enregistrés</h2>
         {isPending && <Skeleton className="h-32 w-full" />}
         {isError && (
           <p className="text-destructive text-sm">
@@ -64,7 +64,7 @@ export function SaisieNiveau() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Ajouter des poteaux</h2>
+        <h2 className="titre-section mb-4">Ajouter des poteaux</h2>
         <TableauSaisiePoteaux niveauId={identifiant} />
       </section>
     </div>

@@ -14,8 +14,8 @@ export function LigneProjet({ projet }: LigneProjetProps) {
       className="flex items-center gap-4 border-t px-2 py-4 transition hover:bg-muted"
     >
       <PastilleProjet nom={projet.nom} className="size-7 text-[12.5px]" />
-      <span className="min-w-0 flex-1 truncate font-medium">{projet.nom}</span>
-      <span className="shrink-0 text-[13px] text-muted-foreground">
+      <span className="nom-ligne min-w-0 flex-1 truncate">{projet.nom}</span>
+      <span className="info shrink-0 text-muted-foreground">
         {dateRelative(projet.date_creation)}
       </span>
     </Link>

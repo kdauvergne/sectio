@@ -1,11 +1,6 @@
 import type { Projet } from "@/types/api";
 import { PastilleProjet } from "@/components/projets/PastilleProjet";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { dateRelative } from "@/lib/projets";
 import { Link } from "react-router-dom";
 
@@ -19,9 +14,9 @@ export function CarteProjet({ projet }: CarteProjetProps) {
       <Card className="h-full min-h-40 transition hover:shadow-md hover:-translate-y-1">
         <CardHeader>
           <PastilleProjet nom={projet.nom} className="size-7.5 text-[13px]" />
-          <CardTitle className="line-clamp-2 pt-3">{projet.nom}</CardTitle>
+          <h3 className="nom-carte line-clamp-2 pt-3">{projet.nom}</h3>
         </CardHeader>
-        <CardContent className="mt-auto text-xs text-muted-foreground">
+        <CardContent className="info-carte mt-auto text-muted-foreground">
           {dateRelative(projet.date_creation)}
         </CardContent>
       </Card>

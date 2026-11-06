@@ -33,7 +33,7 @@ export function DetailProjet() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold">{projet?.nom}</h1>
+      <h1 className="titre-projet">{projet?.nom}</h1>
 
       {isPending && (
         <div className="mt-4 flex flex-col gap-3">
@@ -54,7 +54,7 @@ export function DetailProjet() {
         </p>
       )}
 
-      <h2 className="text-xl font-semibold mt-10 mb-4">Bâtiments</h2>
+      <h2 className="titre-section mt-10 mb-4">Bâtiments</h2>
 
       {!isPending && !isError && projet.batiments.length === 0 && (
         <p className="text-muted-foreground text-sm">
