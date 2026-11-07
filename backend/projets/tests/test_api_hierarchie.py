@@ -271,50 +271,46 @@ def test_meme_repere_dans_deux_niveaux_accepte(client, utilisateur, niveau):
 
 
 @pytest.mark.django_db
-def test_calcul_cree_type_et_calcul(client, utilisateur, poteau):
+def test_route_calculer_poteau_supprimee(client, utilisateur, poteau):
+    """Le calcul se lance uniquement par niveau."""
     client.force_login(utilisateur)
 
     reponse = client.post(f"/api/poteaux/{poteau.pk}/calculer/")
 
-    assert reponse.status_code == 201
-    assert Calcul.objects.count() == 1
-
-    poteau.refresh_from_db()
-    assert poteau.type_poteau is not None
-    assert poteau.type_poteau.calcul_actuel is not None
+    assert reponse.status_code == 404
+    assert Calcul.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_deuxieme_calcul_reutilise_le_type(client, utilisateur, poteau):
+def test_recalcul_de_niveau_reutilise_le_type(client, utilisateur, poteau):
     client.force_login(utilisateur)
-    client.post(f"/api/poteaux/{poteau.pk}/calculer/")
-    client.post(f"/api/poteaux/{poteau.pk}/calculer/")
+    client.post(f"/api/niveaux/{poteau.niveau_id}/calculer/")
+    client.post(f"/api/niveaux/{poteau.niveau_id}/calculer/")
 
     assert TypePoteau.objects.count() == 1
     assert Calcul.objects.count() == 2  # historisé, pas écrasé
 
 
 @pytest.mark.django_db
-def test_poteau_hors_domaine_renvoie_400(client, utilisateur, poteau):
+def test_poteau_hors_domaine_signale_en_echec(client, utilisateur, poteau):
     poteau.L0 = 30.0  # λ très au-delà de 120
     poteau.save()
 
     client.force_login(utilisateur)
-    reponse = client.post(f"/api/poteaux/{poteau.pk}/calculer/")
+    reponse = client.post(f"/api/niveaux/{poteau.niveau_id}/calculer/")
 
-    assert reponse.status_code == 400
-    assert "conditions_violees" in reponse.json()
+    assert reponse.status_code == 201
+    assert [e["reference"] for e in reponse.json()["echecs"]] == [str(poteau.pk)]
     assert Calcul.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_calcul_sur_poteau_etranger_renvoie_404(
-    client, utilisateur, autre_utilisateur, poteau
-):
+def test_calcul_sur_niveau_etranger_renvoie_404(client, autre_utilisateur, poteau):
     client.force_login(autre_utilisateur)
-    reponse = client.post(f"/api/poteaux/{poteau.pk}/calculer/")
+    reponse = client.post(f"/api/niveaux/{poteau.niveau_id}/calculer/")
 
     assert reponse.status_code == 404
+    assert Calcul.objects.count() == 0
 
 
 @pytest.mark.django_db

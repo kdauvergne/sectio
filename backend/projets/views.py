@@ -5,13 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calculs.serializers import CalculSerializer
-from calculs.services import (
-    MethodeNonApplicableException,
-    SectioException,
-    calculer_niveau,
-    calculer_poteau,
-)
+from calculs.services import SectioException, calculer_niveau
 
 from .models import Batiment, Niveau, Poteau, Projet, TypePoteau
 from .serializers import (
@@ -127,36 +121,6 @@ class PoteauViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         with transaction.atomic():
             serializer.save()
-
-    @action(detail=True, methods=["post"])
-    def calculer(self, request, pk=None):
-        poteau = self.get_object()
-
-        try:
-            with transaction.atomic():
-                type_poteau = poteau.type_poteau
-                if type_poteau is None:
-                    type_poteau = TypePoteau.objects.create(
-                        niveau=poteau.niveau, nom=poteau.repere
-                    )
-                    poteau.type_poteau = type_poteau
-                    poteau.save(update_fields=["type_poteau"])
-
-                calcul = calculer_poteau(poteau, type_poteau, request.user)
-                calcul.save()
-
-                type_poteau.calcul_actuel = calcul
-                type_poteau.save(update_fields=["calcul_actuel"])
-
-        except MethodeNonApplicableException as e:
-            return Response(
-                {"conditions_violees": e.conditions_violees},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except SectioException as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(CalculSerializer(calcul).data, status=status.HTTP_201_CREATED)
 
 
 class TypePoteauViewSet(viewsets.ModelViewSet):

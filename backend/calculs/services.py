@@ -141,39 +141,104 @@ def grouper_par_section(poteaux: list[Poteau]) -> dict:
     return groupes
 
 
-def calculer_niveau(niveau: Niveau, utilisateur) -> tuple[list[TypePoteau], list]:
-    """Calcule tous les poteaux d'un niveau et crée les types de ferraillage.
+def _ordre_section(cle: tuple) -> tuple:
+    """Clé de tri d'un groupe : type de section, dimensions, puis matériaux.
 
-    Retourne (types_crees, echecs).
+    Les dimensions absentes (None) sont remplacées par 0 pour rester comparables.
+    """
+    return tuple(0.0 if valeur is None else valeur for valeur in cle)
+
+
+def calculer_niveau(niveau: Niveau, utilisateur) -> tuple[list[TypePoteau], list]:
+    """Calcule tous les poteaux d'un niveau et met à jour ses types de ferraillage.
+
+    Les types sont numérotés « Type 1 », « Type 2 »… sur tout le niveau, dans
+    l'ordre des sections puis des rôles proposés par le classement.
+
+    Un recalcul réutilise les types existants pour conserver l'historique des
+    Calcul : chaque type proposé reprend le type existant qui couvrait déjà le
+    plus de ses poteaux. Les types restés sans poteau sont supprimés (le MCD
+    impose au moins un poteau par type), avec leurs calculs.
+
+    Retourne (types, echecs).
     """
     poteaux = list(Poteau.objects.filter(niveau=niveau))
     par_reference = {str(p.pk): p for p in poteaux}
 
-    types_crees = []
+    types_proposes = []
     echecs = []
 
-    for groupe in grouper_par_section(poteaux).values():
-        entrees = [poteau_vers_entree(p) for p in groupe]
-        types_proposes, echecs_groupe = proposer_types(entrees, MethodeSimplifiee())
+    groupes = grouper_par_section(poteaux)
+    for cle in sorted(groupes, key=_ordre_section):
+        entrees = [poteau_vers_entree(p) for p in groupes[cle]]
+        types_groupe, echecs_groupe = proposer_types(entrees, MethodeSimplifiee())
+        types_proposes.extend(types_groupe)
         echecs.extend(echecs_groupe)
 
-        for numero, type_propose in enumerate(types_proposes, start=1):
-            type_poteau = _enregistrer_type(
-                type_propose, numero, niveau, par_reference, utilisateur
-            )
-            types_crees.append(type_poteau)
+    types_disponibles = list(TypePoteau.objects.filter(niveau=niveau).order_by("pk"))
+    # Rattachements d'avant le recalcul : la boucle ci-dessous les modifie.
+    ancien_type = {p.pk: p.type_poteau_id for p in poteaux}
+    types = []
 
-    return types_crees, echecs
+    for numero, type_propose in enumerate(types_proposes, start=1):
+        couverts = [par_reference[e.reference] for e in type_propose.poteaux_couverts]
+        type_poteau = _reprendre_type(couverts, types_disponibles, ancien_type)
+        if type_poteau is None:
+            type_poteau = TypePoteau(niveau=niveau)
+        else:
+            types_disponibles.remove(type_poteau)
+
+        types.append(
+            _enregistrer_type(
+                type_poteau,
+                f"Type {numero}",
+                type_propose,
+                couverts,
+                par_reference,
+                utilisateur,
+            )
+        )
+
+    # Poteaux en échec : ils ne doivent pas rester rattachés à un ancien type.
+    for entree, _ in echecs:
+        poteau = par_reference[entree.reference]
+        if poteau.type_poteau_id is not None:
+            poteau.type_poteau = None
+            poteau.save(update_fields=["type_poteau"])
+
+    TypePoteau.objects.filter(pk__in=[t.pk for t in types_disponibles]).delete()
+
+    return types, echecs
+
+
+def _reprendre_type(
+    couverts: list[Poteau], types_disponibles: list[TypePoteau], ancien_type: dict
+) -> TypePoteau | None:
+    """Type existant qui couvrait déjà le plus de ces poteaux, ou None.
+
+    À égalité, le plus ancien (types_disponibles est trié par pk).
+    """
+    meilleur, meilleur_score = None, 0
+    for candidat in types_disponibles:
+        score = sum(1 for p in couverts if ancien_type[p.pk] == candidat.pk)
+        if score > meilleur_score:
+            meilleur, meilleur_score = candidat, score
+    return meilleur
 
 
 def _enregistrer_type(
-    type_propose, numero: int, niveau: Niveau, par_reference: dict, utilisateur
+    type_poteau: TypePoteau,
+    nom: str,
+    type_propose,
+    couverts: list[Poteau],
+    par_reference: dict,
+    utilisateur,
 ) -> TypePoteau:
-    """Crée un TypePoteau, son Calcul, et y rattache les poteaux couverts."""
+    """Nomme le type, lui ajoute un nouveau Calcul et y rattache ses poteaux."""
+    type_poteau.nom = nom
+    type_poteau.save()
+
     poteau_representatif = par_reference[type_propose.poteau_representatif.reference]
-
-    type_poteau = TypePoteau.objects.create(niveau=niveau, nom=f"Type {numero}")
-
     calcul = resultat_vers_calcul(
         type_propose.resultat, poteau_representatif, type_poteau, utilisateur
     )
@@ -182,9 +247,9 @@ def _enregistrer_type(
     type_poteau.calcul_actuel = calcul  # type: ignore[assignment]
     type_poteau.save(update_fields=["calcul_actuel"])
 
-    for entree in type_propose.poteaux_couverts:
-        poteau = par_reference[entree.reference]
-        poteau.type_poteau = type_poteau
-        poteau.save(update_fields=["type_poteau"])
+    for poteau in couverts:
+        if poteau.type_poteau_id != type_poteau.pk:
+            poteau.type_poteau = type_poteau
+            poteau.save(update_fields=["type_poteau"])
 
     return type_poteau
