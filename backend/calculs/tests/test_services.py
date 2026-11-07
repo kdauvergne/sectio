@@ -124,3 +124,91 @@ def test_niveau_sans_succes_renvoie_les_echecs(poteau_reference, niveau, utilisa
 
     assert types == []
     assert [entree.reference for entree, _ in echecs] == [str(poteau_reference.pk)]
+
+
+def creer_poteau(niveau, repere, G, cote=0.30):
+    return Poteau.objects.create(
+        niveau=niveau,
+        repere=repere,
+        type_section="rectangulaire",
+        b=cote,
+        h=cote,
+        L0=2.83,
+        d_prime=0.035,
+        G=G,
+        Q=200.0,
+    )
+
+
+@pytest.fixture
+def deux_sections(niveau):
+    """Deux poteaux 30×30 et deux poteaux 40×40, charges fortes et faibles."""
+    return [
+        creer_poteau(niveau, "P1", 1209.0),
+        creer_poteau(niveau, "P2", 400.0),
+        creer_poteau(niveau, "P3", 1800.0, cote=0.40),
+        creer_poteau(niveau, "P4", 400.0, cote=0.40),
+    ]
+
+
+@pytest.mark.django_db
+def test_numerotation_continue_sur_le_niveau(deux_sections, niveau, utilisateur):
+    types, echecs = calculer_niveau(niveau, utilisateur)
+
+    assert echecs == []
+    noms = [t.nom for t in types]
+    assert noms == [f"Type {n}" for n in range(1, len(types) + 1)]
+    # Les sections sont numérotées dans l'ordre : 30×30 avant 40×40.
+    sections = [t.calcul_actuel.b for t in types]
+    assert sections == sorted(sections)
+
+
+@pytest.mark.django_db
+def test_recalcul_sans_doublon_de_types(deux_sections, niveau, utilisateur):
+    types_1, _ = calculer_niveau(niveau, utilisateur)
+    types_2, _ = calculer_niveau(niveau, utilisateur)
+
+    assert [t.pk for t in types_2] == [t.pk for t in types_1]
+    assert [t.nom for t in types_2] == [t.nom for t in types_1]
+    assert TypePoteau.objects.filter(niveau=niveau).count() == len(types_1)
+
+
+@pytest.mark.django_db
+def test_recalcul_conserve_l_historique(deux_sections, niveau, utilisateur):
+    types_1, _ = calculer_niveau(niveau, utilisateur)
+    calculs_1 = {t.pk: t.calcul_actuel_id for t in types_1}
+
+    types_2, _ = calculer_niveau(niveau, utilisateur)
+
+    for type_poteau in types_2:
+        assert type_poteau.calculs.count() == 2
+        assert type_poteau.calcul_actuel_id != calculs_1[type_poteau.pk]
+
+
+@pytest.mark.django_db
+def test_type_sans_poteau_supprime(deux_sections, niveau, utilisateur):
+    calculer_niveau(niveau, utilisateur)
+
+    # Tous les poteaux passent en 30×30 : les types 40×40 n'ont plus de poteau.
+    Poteau.objects.filter(niveau=niveau).update(b=0.30, h=0.30)
+    types, _ = calculer_niveau(niveau, utilisateur)
+
+    restants = TypePoteau.objects.filter(niveau=niveau)
+    assert restants.count() == len(types)
+    assert all(t.poteaux_couverts.exists() for t in restants)
+
+
+@pytest.mark.django_db
+def test_poteau_en_echec_detache_de_son_type(deux_sections, niveau, utilisateur):
+    calculer_niveau(niveau, utilisateur)
+    p1 = deux_sections[0]
+    p1.refresh_from_db()
+    assert p1.type_poteau is not None
+
+    p1.L0 = 30.0  # λ très au-delà de 120
+    p1.save(update_fields=["L0"])
+    _, echecs = calculer_niveau(niveau, utilisateur)
+
+    p1.refresh_from_db()
+    assert [entree.reference for entree, _ in echecs] == [str(p1.pk)]
+    assert p1.type_poteau is None
