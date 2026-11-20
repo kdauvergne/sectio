@@ -10,6 +10,12 @@ export type Projet = {
   classe_exposition: string;
 };
 
+/** Champs envoyés à POST /api/projets/ (les autres sont fixés par le backend). */
+export type NouveauProjet = Pick<
+  Projet,
+  "nom" | "fck" | "fyk" | "classe_exposition"
+>;
+
 /** Forme d'un poteau renvoyé par l'API Django (PoteauSerializer). */
 export type Poteau = {
   id: number;
