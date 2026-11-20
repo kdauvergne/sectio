@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import { recupererProjet } from "@/api/projets";
@@ -13,10 +14,17 @@ import {
   ItemActions,
   ItemGroup,
 } from "@/components/ui/item";
-import { Building2, ChevronRight } from "lucide-react";
+import { Building2, ChevronRight, Plus } from "lucide-react";
+import { DialogueNouveauBatiment } from "@/components/projets/DialogueNouveauBatiment";
+import { DialogueNouveauNiveau } from "@/components/projets/DialogueNouveauNiveau";
+import { Button } from "@/components/ui/button";
 
 export function DetailProjet() {
   const { id } = useParams();
+  const [nouveauBatimentOuvert, setNouveauBatimentOuvert] = useState(false);
+  const [nouveauNiveauOuvert, setNouveauNiveauOuvert] = useState(false);
+  // Gardé à la fermeture : le dialogue reste monté pendant son animation.
+  const [batimentCibleId, setBatimentCibleId] = useState<number | null>(null);
   const {
     data: projet,
     isPending,
@@ -25,6 +33,15 @@ export function DetailProjet() {
     queryKey: ["projets", id],
     queryFn: id ? () => recupererProjet(id) : skipToken,
   });
+
+  const batimentCible = projet?.batiments.find(
+    (batiment) => batiment.id === batimentCibleId,
+  );
+
+  function ouvrirNouveauNiveau(batimentId: number) {
+    setBatimentCibleId(batimentId);
+    setNouveauNiveauOuvert(true);
+  }
 
   useFilAriane([
     { libelle: "Projets", url: "/" },
@@ -54,7 +71,32 @@ export function DetailProjet() {
         </p>
       )}
 
-      <h2 className="titre-section mt-10 mb-4">Bâtiments</h2>
+      <div className="mt-10 mb-4 flex items-center justify-between gap-6">
+        <h2 className="titre-section">Bâtiments</h2>
+        {projet && (
+          <Button size="sm" onClick={() => setNouveauBatimentOuvert(true)}>
+            <Plus />
+            Ajouter un bâtiment
+          </Button>
+        )}
+      </div>
+
+      {projet && (
+        <DialogueNouveauBatiment
+          projet={projet}
+          ouvert={nouveauBatimentOuvert}
+          onOuvertChange={setNouveauBatimentOuvert}
+        />
+      )}
+      {projet && batimentCible && (
+        <DialogueNouveauNiveau
+          key={batimentCible.id}
+          batiment={batimentCible}
+          nomProjet={projet.nom}
+          ouvert={nouveauNiveauOuvert}
+          onOuvertChange={setNouveauNiveauOuvert}
+        />
+      )}
 
       {!isPending && !isError && projet.batiments.length === 0 && (
         <p className="text-muted-foreground text-sm">
@@ -94,7 +136,7 @@ export function DetailProjet() {
                   <Item
                     key={niveau.id}
                     asChild
-                    className="rounded-none border-b py-3 pr-4 pl-12 last:border-b-0 hover:bg-accent"
+                    className="rounded-none border-b py-3 pr-4 pl-12 hover:bg-accent"
                   >
                     <Link to={`/niveaux/${niveau.id}`}>
                       <ItemContent>
@@ -110,11 +152,14 @@ export function DetailProjet() {
                 ))}
               </ItemGroup>
 
-              {batiment.niveaux.length === 0 && (
-                <p className="px-4 py-3 pl-12 text-sm text-muted-foreground">
-                  Aucun niveau.
-                </p>
-              )}
+              <button
+                type="button"
+                onClick={() => ouvrirNouveauNiveau(batiment.id)}
+                className="info flex w-full items-center gap-2 py-3 pr-4 pl-12 text-left text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:bg-accent focus-visible:text-foreground"
+              >
+                <Plus className="size-3.5" />
+                Ajouter un niveau à {batiment.nom}
+              </button>
             </div>
           ))}
       </div>

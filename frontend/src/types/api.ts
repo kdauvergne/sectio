@@ -98,6 +98,12 @@ export type Niveau = {
 
 export type BatimentDetail = Batiment & { niveaux: Niveau[] };
 
+/** Champs envoyés à POST /api/batiments/ ; hypothèses recopiées du projet ou modifiées. */
+export type NouveauBatiment = Omit<Batiment, "id">;
+
+/** Champs envoyés à POST /api/niveaux/ ; hypothèses recopiées du bâtiment ou modifiées. */
+export type NouveauNiveau = Omit<Niveau, "id">;
+
 export type NiveauDetail = Niveau & {
   poteaux: Poteau[];
   batiment_nom: string;

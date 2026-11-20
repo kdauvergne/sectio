@@ -100,6 +100,36 @@ def test_creation_refusee_sur_un_projet_etranger(
 
 
 @pytest.mark.django_db
+def test_nom_de_niveau_en_double_refuse(client, utilisateur, niveau):
+    client.force_login(utilisateur)
+
+    reponse = client.post(
+        "/api/niveaux/",
+        {"nom": niveau.nom, "batiment": niveau.batiment.pk},
+        content_type="application/json",
+    )
+
+    assert reponse.status_code == 400
+    assert Niveau.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_meme_nom_de_niveau_dans_deux_batiments_accepte(
+    client, utilisateur, projet, niveau
+):
+    autre_batiment = Batiment.objects.create(projet=projet, nom="Bâtiment B")
+
+    client.force_login(utilisateur)
+    reponse = client.post(
+        "/api/niveaux/",
+        {"nom": niveau.nom, "batiment": autre_batiment.pk},
+        content_type="application/json",
+    )
+
+    assert reponse.status_code == 201
+
+
+@pytest.mark.django_db
 def test_detail_projet_contient_ses_batiments(client, utilisateur, projet):
     Batiment.objects.create(projet=projet, nom="Bâtiment A")
 
