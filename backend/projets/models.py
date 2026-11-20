@@ -87,6 +87,11 @@ class Niveau(HypothesesHeritees):
         verbose_name = "niveau"
         verbose_name_plural = "niveaux"
         ordering = ["ordre"]  # noqa: RUF012
+        constraints = [  # noqa: RUF012
+            models.UniqueConstraint(
+                fields=["batiment", "nom"], name="niveau_unique_par_batiment"
+            ),
+        ]
 
     @property
     def parent_hypotheses(self):
