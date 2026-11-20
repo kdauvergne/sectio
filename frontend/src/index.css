@@ -189,6 +189,12 @@
   letter-spacing: -0.015em;
 }
 
+@utility titre-dialogue {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
 @utility titre-section {
   font-size: 15px;
   font-weight: 600;

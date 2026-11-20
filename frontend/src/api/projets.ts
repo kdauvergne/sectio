@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import type {
   NiveauDetail,
+  NouveauProjet,
   Projet,
   ProjetDetail,
   Response,
@@ -10,6 +11,12 @@ import type {
 export async function recupererProjets(): Promise<Projet[]> {
   const reponse = await api.get<Response<Projet>>("/projets/");
   return reponse.data.results;
+}
+
+/** POST /api/projets/ — crée un projet ; l'utilisateur connecté en devient membre. */
+export async function creerProjet(projet: NouveauProjet): Promise<Projet> {
+  const reponse = await api.post<Projet>("/projets/", projet);
+  return reponse.data;
 }
 
 /** GET /api/projets/{id}/ un projet de l'utilisateur connecté, avec ses bâtiments (sans leurs niveaux). */

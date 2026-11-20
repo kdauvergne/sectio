@@ -1,10 +1,11 @@
 import { CarteProjet } from "@/components/projets/CarteProjet";
 import { LigneProjet } from "@/components/projets/LigneProjet";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
 import { useState } from "react";
 import { recupererProjets } from "@/api/projets";
 import { BarreRecherche } from "@/components/projets/BarreRecherche";
+import { DialogueNouveauProjet } from "@/components/projets/DialogueNouveauProjet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ export function ListeProjets() {
   const { utilisateur } = useAuth();
   const [recherche, setRecherche] = useState("");
   const [affichage, setAffichage] = useState(lireAffichage);
+  const [nouveauProjetOuvert, setNouveauProjetOuvert] = useState(false);
 
   function changerAffichage(nouvelAffichage: AffichageProjets) {
     setAffichage(nouvelAffichage);
@@ -65,7 +67,16 @@ export function ListeProjets() {
             </span>
           )}
         </div>
+        <Button size="sm" onClick={() => setNouveauProjetOuvert(true)}>
+          <Plus />
+          Nouveau projet
+        </Button>
       </div>
+
+      <DialogueNouveauProjet
+        ouvert={nouveauProjetOuvert}
+        onOuvertChange={setNouveauProjetOuvert}
+      />
 
       <div className="mt-4 mb-6 flex items-center gap-3">
         <BarreRecherche valeur={recherche} onChangement={setRecherche} />
